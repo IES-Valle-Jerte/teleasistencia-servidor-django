@@ -1,0 +1,9 @@
+{% extends 'base/base.html' %}
+
+{% load static %}
+
+{% block content%}
+        <h1>Login Con Google</h1>
+        <p>Puedes utilizar tu cuenta corporativa para loguearte:</p>
+        <a class="btn btn-primary" href="{% url 'social:begin' 'google-oauth2' %}">Login con Google</a><br>
+{% endblock %}

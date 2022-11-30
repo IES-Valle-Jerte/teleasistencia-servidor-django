@@ -1,0 +1,15 @@
+{% extends 'base/base.html' %}
+
+{% block content%}
+    {% if user.is_authenticated %}
+        <h1>El usuario está auntentificado</h1>
+        <p>Bienvenido, {{ user.first_name }}</p>
+        <a href="/admin/logout/">Log out</a>
+
+        <br>
+        <p>Tu token es {{ token }}</p>
+    {% else %}
+        <h1>No estás logueado en el sistema</h1>
+        <a href="/admin">Admin</a>
+    {% endif %}
+{% endblock content %}
