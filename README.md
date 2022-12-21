@@ -30,19 +30,17 @@ Las contribuciones al proyecto se realizarán a través de [forks](https://docs.
 
     <img src="https://user-images.githubusercontent.com/3669279/122238595-8c6e1780-cec0-11eb-8388-561c7ad3d250.png" width="150">
 
-2. Clonar el proyecto en local para su instalación y modificación.
+2. Clonar el proyecto en local para su instalación y modificación. 
 
     <img src="https://user-images.githubusercontent.com/3669279/122239016-e242bf80-cec0-11eb-854c-936d8433b8ea.png" width="400">
 
 Existen varias maneras de clonar un proyecto. Para simplificar todas las tareas con Git-Github se recomienda instalar [Github Desktop](https://desktop.github.com/) y trabajar desde su propia interfaz gráfica.
 
 3. Realiza la instalación del proyecto siguiendo los **Pasos para la instalación**.
-4. Realiza las modificaciones/mejoras que consideres oportunas. Revisa los [Issues del proyecto original](https://github.com/IES-Valle-Jerte/teleasistencia_navalmoral/issues) para encontrar necesidades donde puedes contribuir.
+4. Realiza las modificaciones/mejoras que consideres oportunas. Revisa los [Issues del proyecto original](https://github.com/IES-Valle-Jerte/teleasistencia_navalmoral/issues) para encontrar necesidades donde puedes contribuir.     
 5. Una vez has desarrollado tus contribuciones y las has probado, puedes solicitar que los cambios se añadan al repositorio principal mediante un Pull Request:
 
-   ![image](https://user-images.githubusercontent.com/3669279/122243564-824e1800-cec4-11eb-9cd6-e93938341098.png)
-
-
+    ![image](https://user-images.githubusercontent.com/3669279/122243564-824e1800-cec4-11eb-9cd6-e93938341098.png)
 
 ## Pasos para la instalación:
 
@@ -57,7 +55,7 @@ Existen varias maneras de clonar un proyecto. Para simplificar todas las tareas 
 5. Ejecutamos el siguiente archivo para seleccionar el entorno virtual ```Server/venviorment/Scripts/activate```. Si tuviésemos problemas de permisos para ejecutar dicho comando, revisar [este enlace](https://tecadmin.net/powershell-running-scripts-is-disabled-system/) y correr el comando que aparece como superadministrador en PowerShell.
 6. Hacemos permanente el entorno virtual. Vamos a ```File -> Settings... -> Project --> Python Interpreter``` y seleccionamos el Interprete **ya creado**  ```Server\venviorment\Scripts\python.exe```
 
-   ![image](https://user-images.githubusercontent.com/57873286/122095294-794e3f80-ce0d-11eb-9577-985b2d170102.png)
+    ![image](https://user-images.githubusercontent.com/57873286/122095294-794e3f80-ce0d-11eb-9577-985b2d170102.png)
 
 8. Actualizamos pip ```pip install --upgrade pip```
 9. Instalamos los requerimientos ```pip install -r requerimientos.txt```. Es posible que haya errores durante la instalación de los requisitos, si ocurriesen errores del tipo ```  ```, sería necesario instalar algunos componentes para ejecutar C++ como aparece en la respuesta de [esta pregunta de Stackoverflow](https://stackoverflow.com/questions/64261546/python-cant-install-packages) (Descargar vs_buildtools y ejecutar el comando que aparece al final de la respuesta marcada como solución).
@@ -81,9 +79,7 @@ Los alumnos que han contribuido en el desarrollo de este proyecto y la labor que
 - **Lucía González**: Creación de la primera versión del cliente Angular.
 - **Javier Fernández**: Inicialización completa de la API-Rest y Postman.
 
-Especial mención al departamento de Atención Sociosanitaria del IES San Martín de Talayuela. Partícipes e impulsores de la plataforma de prácticas de Teleasistencia.
-
-
+Especial mención al departamento de Atención Sociosanitaria del IES San Martín de Talayuela. Partícipes e impulsores de la plataforma de prácticas de Teleasistencia. 
 
 
 [Sobre el Gitignore](https://djangowaves.com/tips-tricks/gitignore-for-a-django-project/)
