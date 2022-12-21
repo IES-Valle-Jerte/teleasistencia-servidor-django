@@ -7,7 +7,7 @@ Dado el crecimiento del proyecto y la cantidad de aplicaciones que engloba se ha
 
 Este proyecto consiste en un desarrollo Web de un servicio de Teleasistencia para que los alumnos del FP de Atención Sociosanitaria puedan realizar prácticas en el aula como si de un entorno real se tratase.
 
-Para probar el proyecto, y antes de realizar la instalación, se recomienda que se sigan los pasos que aparecen en **Pasos para contribuir al proyecto**. 
+Para probar el proyecto, y antes de realizar la instalación, se recomienda que se sigan los pasos que aparecen en **Pasos para contribuir al proyecto**.
 
 ## Dependencias:
 Se gestionan en la instalación, a través del fichero *requerimentos.txt*. Las dejamos aquí apuntadas por si fuese necesario revisarlas:
@@ -42,11 +42,9 @@ Existen varias maneras de clonar un proyecto. Para simplificar todas las tareas 
 
     ![image](https://user-images.githubusercontent.com/3669279/122243564-824e1800-cec4-11eb-9cd6-e93938341098.png)
 
-
-
 ## Pasos para la instalación:
 
-1. Instalación de python - https://www.python.org/ . Seleccionar la opción que nos permite añadir python al PATH. 
+1. Instalación de python - https://www.python.org/ . Seleccionar la opción que nos permite añadir python al PATH.
    Comprobamos la instalación desde cmd: ```python --version```
 2. Descargamos e instalamos el Entorno de desarrollo PyCharm - https://www.jetbrains.com/pycharm/
 3. Creamos el [entorno virutal](https://docs.python.org/3/library/venv.html) en la ruta Server ```virtualenv venviorment```
@@ -83,7 +81,5 @@ Los alumnos que han contribuido en el desarrollo de este proyecto y la labor que
 
 Especial mención al departamento de Atención Sociosanitaria del IES San Martín de Talayuela. Partícipes e impulsores de la plataforma de prácticas de Teleasistencia. 
 
-
- 
 
 [Sobre el Gitignore](https://djangowaves.com/tips-tricks/gitignore-for-a-django-project/)
