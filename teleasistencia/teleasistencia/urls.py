@@ -41,10 +41,9 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'users', views_rest.UserViewSet)
 router.register(r'groups', views_rest.GroupViewSet)
 router.register(r'permission', views_rest.PermissionViewSet)
+router.register(r'clasificacion_recurso_comunitario', views_rest.Clasificacion_Recurso_Comunitario_ViewSet)
 router.register(r'tipo_recurso_comunitario', views_rest.Tipo_Recurso_Comunitario_ViewSet)
 router.register(r'recurso_comunitario', views_rest.Recurso_Comunitario_ViewSet)
-router.register(r'centro_sanitario', views_rest.Centro_Sanitario_ViewSet)
-router.register(r'tipo_centro_sanitario', views_rest.Tipo_Centro_Sanitario_ViewSet)
 router.register(r'tipo_alarma', views_rest.Tipo_Alarma_ViewSet)
 router.register(r'clasificacion_alarma', views_rest.Clasificacion_Alarma_ViewSet)
 router.register(r'direccion', views_rest.Direccion_ViewSet)
@@ -63,15 +62,10 @@ router.register(r'tipo_modalidad_paciente', views_rest.Tipo_Modalidad_Paciente_V
 router.register(r'recursos_comunitarios_en_alarma', views_rest.Recursos_Comunitarios_En_Alarma_ViewSet)
 router.register(r'alarma', views_rest.Alarma_ViewSet)
 router.register(r'dispositivos_auxiliares_en_terminal', views_rest.Dispositivos_Auxiliares_en_Terminal_ViewSet)
-router.register(r'centro_sanitario_en_alarma', views_rest.Centro_Sanitario_En_Alarma_ViewSet)
 router.register(r'persona_contacto_en_alarma', views_rest.Persona_Contacto_En_Alarma_ViewSet)
-router.register(r'relacion_usuario_centro', views_rest.Relacion_Usuario_Centro_ViewSet)
 router.register(r'gestion_base_datos', views_rest.Gestion_Base_Datos_ViewSet)
 router.register(r'profile', views_rest.ProfileViewSet)
-router.register(r'recurso_comunitario_personal', views_rest.Recurso_comunitario_personalViewSet, basename="recurso_comunitario_personal")
 router.register(r'desarrollador_tecnologia', views_rest.DesarrolladorTecnologiaViewSet)
-
-
 
 
 urlpatterns = [

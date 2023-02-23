@@ -39,64 +39,6 @@ class IsTeacherMember(permissions.BasePermission):
         if request.user.groups.filter(name="profesor").exists():
             return True
 
-# Creamos la vista Recurso Comunitario Personal de tipo viewSet que retorna un JSON
-class Recurso_comunitario_personalViewSet(viewsets.ViewSet):
-    def list(self,request, *args, **kwargs):
-        data=[
-
-        ]
-        #Obtenemos los pacientes y los tipos de centro sanitario y de recurso comuniatario
-        pacientes = Paciente.objects.all().order_by('id_persona')
-        tipos_centro_santario = Tipo_Centro_Sanitario.objects.all().order_by('nombre')
-        tipos_recurso_comunitario=Tipo_Recurso_Comunitario.objects.all().order_by('nombre')
-        #Recorremos los pacientes y obetensmos loas datos que deseesmos
-        for paciente in pacientes:
-            dataPaciente={
-                "id_paciente": paciente.id,
-                "Nombre": paciente.id_persona.nombre,
-                "Apellidos": paciente.id_persona.apellidos,
-                "Sexo":paciente.id_persona.sexo,
-                "Localidad":paciente.id_persona.id_direccion.localidad,
-                "Direccion":paciente.id_persona.id_direccion.direccion,
-                "Provincia": paciente.id_persona.id_direccion.provincia,
-            }
-                #recorro los tipo de centro sanitario
-            for tipo_centro_santario in tipos_centro_santario:
-                #obtengo los centros segun el id de tipos centro sanitario
-                centro_sanitario = Centro_Sanitario.objects.filter(id_tipos_centro_sanitario=tipo_centro_santario)
-                #si el array es nulo
-                if not centro_sanitario:
-                    dataPaciente[tipo_centro_santario.nombre]=""
-                    #sino
-                else:
-                    # obtengo la relacion usuario centro segun el id de centro y el id de paciente
-                    relaciones_usuario_centro = Relacion_Usuario_Centro.objects.filter(id_paciente=paciente.id).filter(id_centro_sanitario__in=centro_sanitario).first()
-                    if relaciones_usuario_centro is not None:
-                        #si no es null muestro elnombre del centro sanitario
-
-                        dataPaciente[tipo_centro_santario.nombre] = relaciones_usuario_centro.id_centro_sanitario.nombre
-
-                    else:
-                            dataPaciente[tipo_centro_santario.nombre]=""
-            # recorro los tipo de recurso comunitario
-            for tipo_recurso_comunitario in tipos_recurso_comunitario:
-                # obtengo los recursos segun el id de tipos recursos comunitarios
-                recurso_comunitario=Recurso_Comunitario.objects.filter(id_tipos_recurso_comunitario=tipo_recurso_comunitario)
-                # si el array es nulo comillas vacías
-                if not recurso_comunitario:
-                    dataPaciente[tipo_recurso_comunitario.nombre] = ""
-                else:
-                    # obtengo la relacion terminal recurso segun el id de terminal y el id del recurso comunitario
-                    relacion_terminal_recurso_comunitario= Relacion_Terminal_Recurso_Comunitario.objects.filter(id_terminal=paciente.id_terminal).filter(id_recurso_comunitario__in=recurso_comunitario).first()
-                    if relacion_terminal_recurso_comunitario is not None:
-                        dataPaciente[tipo_recurso_comunitario.nombre] =relacion_terminal_recurso_comunitario.id_recurso_comunitario.nombre
-                    else:
-                        # sino tienen nada comillas vacías
-                        dataPaciente[tipo_recurso_comunitario.nombre] = ""
-            #Incluimos los datos en el Array principal y lo retornamos
-            data.append(dataPaciente)
-        return JsonResponse(data,safe=False)
-
 # Creamos la vista Profile que  modificara los datos y retornara la informacion del usuario activo en la aplicación
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
@@ -266,6 +208,16 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [IsTeacherMember]
 
 
+class Clasificacion_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint para las empresas
+    """
+    queryset = Clasificacion_Recurso_Comunitario.objects.all()
+    serializer_class = Clasificacion_Recurso_Comunitario_Serializer
+    # Habría que descomentar la siguiente línea para permitir las acciones sólo a los usuarios autenticados (Authorization en la petición POST)
+    # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
+    permission_classes = [IsTeacherMember]
+
 class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     """
     API endpoint para las empresas
@@ -339,80 +291,6 @@ class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
         # Devolvemos los datos
         recurso_comunitario_serializer = Recurso_Comunitario_Serializer(recurso_comunitario)
         return Response(recurso_comunitario_serializer.data)
-
-
-
-class Centro_Sanitario_ViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint para las empresas
-    """
-    queryset = Centro_Sanitario.objects.all()
-    serializer_class = Centro_Sanitario_Serializer
-
-    # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-
-        # Comprobamos que el tipo de centro sanitario existe
-        tipo_centro_sanitario = Tipo_Centro_Sanitario.objects.get(pk=request.data.get("id_tipos_centro_sanitario"))
-        if tipo_centro_sanitario is None:
-            return Response("Error: tipo_centro_sanitario")
-
-        # Obtenemos los datos de dirección y los almacenamos
-        direccion_serializer = Direccion_Serializer(data=request.data.get("id_direccion"))
-        if direccion_serializer.is_valid():
-            direccion = direccion_serializer.save()
-        else:
-            return Response("Error: direccion")
-
-        # Creamos el centro sanitario con el tipo de centro y la dirección
-        centro_sanitario = Centro_Sanitario(
-            nombre=request.data.get("nombre"),
-            telefono=request.data.get("telefono"),
-            id_tipos_centro_sanitario=tipo_centro_sanitario,
-            id_direccion=direccion
-        )
-        centro_sanitario.save()
-
-        # Devolvemos los datos
-        centro_sanitario_serializer = Centro_Sanitario_Serializer(centro_sanitario)
-        return Response(centro_sanitario_serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        # Comprobamos que el tipo de centro sanitario existe
-        tipo_centro_sanitario = Tipo_Centro_Sanitario.objects.get(pk=request.data.get("id_tipos_centro_sanitario"))
-        if tipo_centro_sanitario is None:
-            return Response("Error: tipo_centro_sanitario")
-
-        # Obtenemos los datos de dirección y los almacenamos
-        direccion_serializer = Direccion_Serializer(data=request.data.get("id_direccion"))
-        if direccion_serializer.is_valid():
-            direccion = direccion_serializer.save()
-        else:
-            return Response("Error: direccion")
-
-        centro_sanitario = Centro_Sanitario.objects.get(pk=kwargs["pk"])
-        centro_sanitario.id_tipos_centro_sanitario = tipo_centro_sanitario
-        centro_sanitario.nombre = request.data.get("nombre")
-        centro_sanitario.telefono = request.data.get("telefono")
-        centro_sanitario.id_direccion = direccion
-
-        centro_sanitario.save()
-
-        # Devolvemos los datos
-        centro_sanitario_serializer = Centro_Sanitario_Serializer(centro_sanitario)
-        return Response(centro_sanitario_serializer.data)
-
-
-class Tipo_Centro_Sanitario_ViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint para las empresas
-    """
-    queryset = Tipo_Centro_Sanitario.objects.all()
-    serializer_class = Tipo_Centro_Sanitario_Serializer
-    # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
-    permission_classes = [IsTeacherMember]
-
 
 class Tipo_Alarma_ViewSet(viewsets.ModelViewSet):
     """
@@ -1394,80 +1272,6 @@ class Dispositivos_Auxiliares_en_Terminal_ViewSet(viewsets.ModelViewSet):
             (dispositivos_auxiliares_en_terminal)
         return Response(dispositivos_auxiliares_en_terminal_serializer.data)
 
-
-class Centro_Sanitario_En_Alarma_ViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint para las empresas
-    """
-    queryset = Centro_Sanitario_En_Alarma.objects.all()
-    serializer_class = Centro_Sanitario_En_Alarma_Serializer
-    # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        # Hacemos una búsqueda por los valores introducidos por parámetros
-        query = getQueryAnd(request.GET)
-        if query:
-            queryset = Centro_Sanitario_En_Alarma.objects.filter(query)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        # Comprobamos que existe id_alarma
-        id_alarma = Alarma.objects.get(pk=request.data.get("id_alarma"))
-        if id_alarma is None:
-            return Response("Error: id_alarma")
-
-        # Comprobamos que existe id_centro_sanitario
-        id_centro_sanitario = Centro_Sanitario.objects.get(pk=request.data.get("id_centro_sanitario"))
-        if id_centro_sanitario is None:
-            return Response("Error: id_centro_sanitario")
-
-        centro_sanitario_en_alarma = Centro_Sanitario_En_Alarma(
-            fecha_registro=request.data.get("fecha_registro"),
-            persona=request.data.get("persona"),
-            acuerdo_alcanzado=request.data.get("acuerdo_alcanzado"),
-            id_alarma=id_alarma,
-            id_centro_sanitario=id_centro_sanitario
-        )
-        centro_sanitario_en_alarma.save()
-
-        # Devolvemos el centro_sanitario_en_alarma creado
-        centro_sanitario_en_alarma_serializer = Centro_Sanitario_En_Alarma_Serializer(centro_sanitario_en_alarma)
-        return Response(centro_sanitario_en_alarma_serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        # Comprobamos que existe id_alarma
-        id_alarma = Alarma.objects.get(pk=request.data.get("id_alarma"))
-        if id_alarma is None:
-            return Response("Error: id_alarma")
-
-        # Comprobamos que existe id_centro_sanitario
-        id_centro_sanitario = Centro_Sanitario.objects.get(pk=request.data.get("id_centro_sanitario"))
-        if id_centro_sanitario is None:
-            return Response("Error: id_centro_sanitario")
-
-        centro_sanitario_en_alarma = Centro_Sanitario_En_Alarma.objects.get(pk=kwargs["pk"])
-        if request.data.get("fecha_registro") is not None:
-            centro_sanitario_en_alarma.fecha_registro = request.data.get("fecha_registro")
-        if request.data.get("persona") is not None:
-            centro_sanitario_en_alarma.persona = request.data.get("persona")
-        if request.data.get("acuerdo_alcanzado") is not None:
-            centro_sanitario_en_alarma.acuerdo_alcanzado = request.data.get("acuerdo_alcanzado")
-        centro_sanitario_en_alarma.id_alarma = id_alarma
-        centro_sanitario_en_alarma.id_centro_sanitario = id_centro_sanitario
-
-        centro_sanitario_en_alarma.save()
-
-        # Devolvemos el centro_sanitario_en_alarma creado
-        centro_sanitario_en_alarma_serializer = Centro_Sanitario_En_Alarma_Serializer(centro_sanitario_en_alarma)
-        return Response(centro_sanitario_en_alarma_serializer.data)
-
-
-
-
 class Persona_Contacto_En_Alarma_ViewSet(viewsets.ModelViewSet):
     """
     API endpoint para las empresas
@@ -1536,79 +1340,6 @@ class Persona_Contacto_En_Alarma_ViewSet(viewsets.ModelViewSet):
         persona_contacto_en_alarma_serializer = Persona_Contacto_En_Alarma_Serializer(persona_contacto_en_alarma)
         return Response(persona_contacto_en_alarma_serializer.data)
 
-
-class Relacion_Usuario_Centro_ViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint para las empresas
-    """
-    queryset = Relacion_Usuario_Centro.objects.all()
-    serializer_class = Relacion_Usuario_Centro_Serializer
-    # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        # Hacemos una búsqueda por los valores introducidos por parámetros
-        query = getQueryAnd(request.GET)
-        if query:
-            queryset = Relacion_Usuario_Centro.objects.filter(query)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        # Comprobamos si existe el id_paciente
-        id_paciente = Paciente.objects.get(pk=request.data.get("id_paciente"))
-        if id_paciente is None:
-            return Response("Error: id_paciente")
-
-        # Comprobamos si existe el id_centro_sanitario
-        id_centro_sanitario = Centro_Sanitario.objects.get(pk=request.data.get("id_centro_sanitario"))
-        if id_centro_sanitario is None:
-            return Response("Error: id_centro_sanitario")
-
-        relacion_usuario_centro = Relacion_Usuario_Centro(
-            persona_contacto=request.data.get("persona_contacto"),
-            distancia=request.data.get("distancia"), # Viene en km
-            tiempo=request.data.get("tiempo"), # Viene en minutos
-            observaciones=request.data.get("observaciones"),
-            id_paciente=id_paciente,
-            id_centro_sanitario=id_centro_sanitario
-        )
-
-        relacion_usuario_centro.save()
-
-        # Devolvemos la relacion_usuario_centro creada
-        relacion_usuario_centro_serializer = Relacion_Usuario_Centro_Serializer(relacion_usuario_centro)
-        return Response(relacion_usuario_centro_serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        # Comprobamos si existe el id_paciente
-        id_paciente = Paciente.objects.get(pk=request.data.get("id_paciente"))
-        if id_paciente is None:
-            return Response("Error: id_paciente")
-
-        # Comprobamos si existe el id_centro_sanitario
-        id_centro_sanitario = Centro_Sanitario.objects.get(pk=request.data.get("id_centro_sanitario"))
-        if id_centro_sanitario is None:
-            return Response("Error: id_centro_sanitario")
-
-        relacion_usuario_centro = Relacion_Usuario_Centro.objects.get(pk=kwargs["pk"])
-        if request.data.get("persona_contacto") is not None:
-            relacion_usuario_centro.persona_contacto = request.data.get("persona_contacto")
-        if request.data.get("distancia") is not None:
-            relacion_usuario_centro.distancia = request.data.get("distancia")
-        if request.data.get("tiempo") is not None:
-            relacion_usuario_centro.tiempo = request.data.get("tiempo")
-        if request.data.get("observaciones") is not None:
-            relacion_usuario_centro.observaciones = request.data.get("observaciones")
-        relacion_usuario_centro.id_paciente = id_paciente
-        relacion_usuario_centro.id_centro_sanitario = id_centro_sanitario
-        relacion_usuario_centro.save()
-
-        # Devolvemos la relacion_usuario_centro modificada
-        relacion_usuario_centro_serializer = Relacion_Usuario_Centro_Serializer(relacion_usuario_centro)
-        return Response(relacion_usuario_centro_serializer.data)
 
 class Gestion_Base_Datos_ViewSet(viewsets.ModelViewSet):
     """
