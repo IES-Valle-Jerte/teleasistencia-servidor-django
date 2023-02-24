@@ -144,6 +144,7 @@ class Terminal(models.Model):
 class Relacion_Terminal_Recurso_Comunitario(models.Model):
     id_terminal = models.ForeignKey(Terminal, null=True, on_delete=models.SET_NULL)
     id_recurso_comunitario = models.ForeignKey(Recurso_Comunitario, null=True, on_delete=models.SET_NULL)
+    tiempo_estimado = models.IntegerField(default=1)
 
 
 class Agenda(models.Model):
@@ -222,7 +223,16 @@ class Historico_Tipo_Situacion(models.Model):
     id_terminal = models.ForeignKey(Terminal, null=True, on_delete=models.SET_NULL)
     fecha = models.DateField(null=False, default=now)
     def __str__(self):
-        return self.id_tipo_situacion.nombre+" - "+self.id_terminal.numero_terminal+" - "+self.id_terminal.id_titular.id_persona.nombre
+        if self.id_tipo_situacion and self.id_terminal and self.id_terminal.id_titular:
+            return self.id_tipo_situacion.nombre+" - "+self.id_terminal.numero_terminal+" - "+self.id_terminal.id_titular.id_persona.nombre + " - "+str(self.fecha)
+        elif self.id_tipo_situacion and self.id_terminal:
+            return self.id_tipo_situacion.nombre+" - "+self.id_terminal.numero_terminal+ " - "+str(self.fecha)
+        elif self.id_tipo_situacion:
+            return self.id_tipo_situacion.nombre+ " - "+str(self.fecha)
+        elif self.id_terminal and self.id_terminal.id_titular:
+            return self.id_terminal.numero_terminal+" - "+self.id_terminal.id_titular.id_persona.nombre+ " - "+str(self.fecha)
+        elif self.id_terminal:
+            return self.id_terminal.numero_terminal+ " - "+str(self.fecha)
 
 class Gestion_Base_Datos(models.Model):
     ubicacion_copia = models.CharField(max_length=200, default='/Server/teleasistencia/backup')
