@@ -161,8 +161,13 @@ REST_FRAMEWORK = {
 # Especificamos los timpos de validez del token
 # Tambien el tipo de cabecera de ese token Bearer
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    # Lo más "correcto" es que el token de acceso tenga una duración relativamente
+    # corta, de unos minutos, para que no sea de mucho uso si es robado.
+    # Por otra parte, el token de refresco, sirve para obtener un nuevo token de accesow
+    # cuando este deje de ser válido, por lo que lo normal es que este dure significativamente más.
+    # TODO: hacer uso del refresh token en todos los clientes (revertir duración de los tokens)
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=365),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365),
     'AUTH_HEADER_TYPES': ('Bearer',),
 
 
