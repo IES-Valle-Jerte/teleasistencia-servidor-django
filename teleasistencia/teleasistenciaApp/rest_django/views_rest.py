@@ -752,6 +752,17 @@ class Historico_Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
     serializer_class = Historico_Tipo_Situación_Serializer
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
+    def list(self, request, *args, **kwargs):
+
+        queryset = self.filter_queryset(self.get_queryset())
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Historico_Tipo_Situacion.objects.filter(query)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
         # Comprobamos que el tipo situacion existe
         id_tipo_situacion = Tipo_Situacion.objects.get(pk=request.data.get("id_tipo_situacion"))
