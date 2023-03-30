@@ -13,7 +13,7 @@ class Imagen_User(models.Model):
 
 class Tipo_Agenda(models.Model):
     nombre = models.CharField(max_length=200)
-    codigo = models.IntegerField()
+    codigo = models.CharField(max_length=100)
     IMPORTANCIA_ENUM = Choices("Alta","Baja")
     importancia = models.CharField(choices=IMPORTANCIA_ENUM, default=IMPORTANCIA_ENUM.Baja, max_length=20)
     def __str__(self):
@@ -127,7 +127,7 @@ class Tipo_Vivienda(models.Model):
 
 class Terminal(models.Model):
     numero_terminal = models.CharField(max_length=30, null=False)
-    id_titular = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL, blank=True)
+    id_titular = models.ForeignKey(Paciente, null=True, on_delete=models.PROTECT, blank=True)
     id_tipo_vivienda = models.ForeignKey(Tipo_Vivienda, null=True, on_delete=models.SET_NULL)
     modo_acceso_vivienda = models.CharField(max_length=400)
     barreras_arquitectonicas = models.CharField(max_length=5000, blank=True)
