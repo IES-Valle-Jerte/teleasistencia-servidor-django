@@ -13,7 +13,7 @@ class Imagen_User(models.Model):
 
 class Tipo_Agenda(models.Model):
     nombre = models.CharField(max_length=200)
-    codigo = models.IntegerField()
+    codigo = models.CharField(max_length=100)
     IMPORTANCIA_ENUM = Choices("Alta","Baja")
     importancia = models.CharField(choices=IMPORTANCIA_ENUM, default=IMPORTANCIA_ENUM.Baja, max_length=20)
     def __str__(self):
