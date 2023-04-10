@@ -157,12 +157,14 @@ class Recursos_Comunitarios_En_Alarma_Serializer(serializers.ModelSerializer):
 
 
 class Alarma_Serializer(serializers.ModelSerializer):
+    # fecha_registro = serializers.DateTimeField(input_formats=["%Y-%m-%dT%H:%M:%S%z"])
     class Meta:
         model = Alarma
         fields = '__all__'
         depth = 3
         
 class Alarma_Programada_Serializer(serializers.ModelSerializer):
+    # fecha_registro = serializers.DateTimeField(input_formats=["%Y-%m-%dT%H:%M:%S%z"])
     class Meta:
         model = Alarma_Programada
         fields = '__all__'
