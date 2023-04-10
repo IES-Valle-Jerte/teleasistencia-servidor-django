@@ -41,7 +41,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'/teleasistenciaApp')
 
 INSTALLED_APPS = [
     'channels',
-    'teleasistenciaApp.apps.TeleasistenciaappConfig' ,
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,7 +60,8 @@ INSTALLED_APPS = [
     # Para certificado https:
     "django_extensions",
 
-    #App para la notificación de alarmas
+    'teleasistenciaApp',
+    # App para la notificación de alarmas
     'alarmasApp'
 ]
 
@@ -150,7 +150,7 @@ REST_FRAMEWORK = {
         # OAuth
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  # django-oauth-toolkit >= 1.0.0
         #'rest_framework_social_oauth2.authentication.SocialAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 
       'DEFAULT_PERMISSION_CLASSES': [
@@ -182,6 +182,7 @@ AUTHENTICATION_BACKENDS = (
         'rest_framework_social_oauth2.backends.DjangoOAuth2',
     # Django
     'django.contrib.auth.backends.ModelBackend',
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
 )
 
 #Redirección tras login OK POR OAUTH2 (ELIMINAR CUANDO SE COMPRUEBE QUE NO PETA)

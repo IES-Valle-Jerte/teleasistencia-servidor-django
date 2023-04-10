@@ -161,7 +161,12 @@ class Alarma_Serializer(serializers.ModelSerializer):
         model = Alarma
         fields = '__all__'
         depth = 3
-
+        
+class Alarma_Programada_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Alarma_Programada
+        fields = '__all__'
+        depth = 3
 
 class Dispositivos_Auxiliares_en_Terminal_Serializer(serializers.ModelSerializer):
     class Meta:

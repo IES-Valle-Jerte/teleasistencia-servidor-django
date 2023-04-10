@@ -175,7 +175,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(user_serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        print(kwargs)
+        print(f"\033[33m{kwargs}\033[0m")
         user = User.objects.get(pk=kwargs["pk"])
         try:
           image = Imagen_User.objects.get(user=user)
@@ -183,7 +183,7 @@ class UserViewSet(viewsets.ModelViewSet):
           if image.imagen is not None:
              os.remove(image.imagen.path)
         except:
-            print('error propio')
+            print('\033[33m'+'error propio'+'\033[0m')
         user.delete()
         return Response('borrado')
 
@@ -1098,8 +1098,8 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
     API endpoint para las alarmas
     """
     #Constantes de notificación
-    ACTION_NEW_ALARM = 'new_alarm'
-    ACTION_ALARM_ASSIGNMENT = 'alarm_assignment'
+    # ACTION_NEW_ALARM = 'new_alarm'
+    # ACTION_ALARM_ASSIGNMENT = 'alarm_assignment'
 
     queryset = Alarma.objects.all()
     serializer_class = Alarma_Serializer
@@ -1138,9 +1138,6 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
 
             alarma.save()
 
-            # Enviamos notificación a los teleoperadores a través de la app alarmas
-            self.notify(alarma, self.ACTION_NEW_ALARM)
-
             # Devolvemos la alarma creada
             alarma_serializer = Alarma_Serializer(alarma)
             return Response(alarma_serializer.data)
@@ -1157,9 +1154,6 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
             )
 
             alarma.save()
-
-            # Enviamos notificación a los teleoperadores a través de la app alarmas
-            self.notify(alarma, self.ACTION_NEW_ALARM)
 
             # Devolvemos la alarma creada y notificamos a los clientes
             alarma_serializer = Alarma_Serializer(alarma)
@@ -1191,21 +1185,117 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
 
         # Notificamos si es una asignación (el id_teleoperador era null y ahora no)
         if old_id is None and id_teleoperador is not None:
-            self.notify(alarma, self.ACTION_ALARM_ASSIGNMENT)
+            alarma.notify_clients('alarm_assignment')
 
         # Devolvemos la alarma modificada
         alarma_serializer = Alarma_Serializer(alarma)
         return Response(alarma_serializer.data)
 
+class Alarma_Programada_ViewSet(viewsets.ModelViewSet):
+    """
+        API endpoint para las alarmas programadas
+    """
 
-    def notify(self, alarma, accion):
-        alarma_serializer = Alarma_Serializer(alarma)
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            'teleoperadores',
-            {"type": "notify.clients", "action": accion, "alarma": alarma_serializer.data},
+    queryset = Alarma_Programada.objects.all()
+    serializer_class = Alarma_Programada_Serializer
+    # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Alarma_Programada.objects.filter(query)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # Definimos el metodo para crear la alarma programad
+    def create(self, request, *args, **kwargs):
+        # Comprobamos que existe id_tipo_alarma
+        id_tipo_alarma = Tipo_Alarma.objects.get(pk=request.data.get("id_tipo_alarma"))
+        if id_tipo_alarma is None:
+            return Response("Error: id_tipo_alarma")
+
+        # Comprobamos que hay una fecha/hora programada
+        # TODO: validar fecha y tratar con el desfase horario
+        fecha_registro = request.data.get("fecha_registro")
+        if fecha_registro is None:
+            return Response("Error: fecha_registro")
+
+        # Creamos la alarma, pero la guardaremos en el paso siguiente,
+        alarma_prog = Alarma_Programada(
+            id_tipo_alarma=id_tipo_alarma,
+            fecha_registro=fecha_registro
         )
 
+        # Como hay dos formas de crear una alarma, dependiendo el parametro que recibamos
+        # creamos la alarma de una forma u otra
+        if request.data.get("id_terminal") is not None:
+            id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
+            if id_terminal is None:
+                return Response("Error: id_terminal")
+
+            # Creo la alarma con id_terminal
+            alarma_prog.id_terminal = id_terminal
+            alarma_prog.save()
+
+            # Devolvemos la alarma creada
+            alarma_serializer = Alarma_Programada_Serializer(alarma_prog)
+            return Response(alarma_serializer.data)
+        elif request.data.get("id_paciente_ucr") is not None:
+            id_paciente_ucr = Paciente.objects.get(pk=request.data.get("id_paciente_ucr"))
+            if id_paciente_ucr is None:
+                return Response("Error: id_paciente_ucr")
+
+            # Creo la alarma con id_paciente_ucr
+            alarma_prog.id_paciente_ucr = id_paciente_ucr
+            alarma_prog.save()
+
+            # Devolvemos la alarma creada
+            alarma_serializer = Alarma_Programada_Serializer(alarma_prog)
+            return Response(alarma_serializer.data)
+
+    # TODO id_teleoperador se añade por JSON
+    # Permitimos que se pueda cambiar cualquier tipo de dato 
+    def update(self, request, *args, **kwargs):
+        # Obtenemos la alarma a modificar
+        alarma_prog = Alarma_Programada.objects.get(pk=kwargs["pk"])
+
+        if request.data.get("id_tipo_alarma") is not None:
+            # Si no existe en la BBDD, devolver un error
+            if Tipo_Alarma.objects.get(pk=request.data.get("id_tipo_alarma")) is None:
+                return Response("Error: id_tipo_alarma")
+            alarma_prog.id_tipo_alarma = request.data.get("id_tipo_alarma")
+
+        if request.data.get("fecha_registro") is not None:
+            # TODO: validar el formato de la fecha
+            alarma_prog.fecha_registro = request.data.get("fecha_registro")
+
+        # Caso alarma por UCR
+        if request.data.get("id_paciente_ucr") is not None:
+            id_paciente_ucr = Paciente.objects.get(pk=request.data.get("id_paciente_ucr"))
+            if id_paciente_ucr is None:
+                return Response("Error: id_paciente_ucr")
+
+            alarma_prog.id_paciente_ucr = id_paciente_ucr
+            alarma_prog.id_terminal = None
+
+        # Caso alarma por terminal
+        elif request.data.get("id_terminal") is not None:
+            id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
+            if id_terminal is None:
+                return Response("Error: id_terminal")
+
+            alarma_prog.id_terminal = id_terminal
+            alarma_prog.id_paciente_ucr = None
+
+        alarma_prog.save()
+
+        # Devolvemos la alarma modificada
+        alarma_serializer = Alarma_Programada_Serializer(alarma_prog)
+        return Response(alarma_serializer.data)
 
 class Dispositivos_Auxiliares_en_Terminal_ViewSet(viewsets.ModelViewSet):
     """

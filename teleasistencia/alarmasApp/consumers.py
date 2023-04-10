@@ -16,7 +16,7 @@ class Consumer(WebsocketConsumer):
 
     # Función que se ejecutará cuando un WebSocket cliente se desconecte del servidor
     def disconnect(self, code):
-        print("Closed websocket with code: ", code)
+        print(f"\033[33mClosed websocket with code: {code}\033[0m")
         async_to_sync(self.channel_layer.group_discard)(
             'teleoperadores',
             self.channel_name
@@ -24,10 +24,11 @@ class Consumer(WebsocketConsumer):
         self.close()
 
     # Función que utilizaremos para enviar mensajes de notifiación de Alarmas a nuestros clientes
+    # El modelo automáticamente se encarga de notificar cuando son creadas
     def notify_clients(self, event):
         action = event['action']
         alarma = event['alarma']
-
+        
         self.send(text_data=json.dumps({
             'action': action,
             'alarma': alarma
