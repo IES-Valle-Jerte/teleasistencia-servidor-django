@@ -24,6 +24,8 @@ class AlarmasAppConfig(AppConfig):
         # ============= Cargar Alarmas Programadas =============
         try:
             procesar_alarmas_programadas()
+            print("[\033[33m%s\033[0m]: Procesadas alarmas pendientes" % ('AlarmasApp'))
+            # Iniciamos el sheduler para que gestione la tarea de las alarmas programadas
             self.run_scheduler()
 
         # Este try-catch es para evitar que se procesen las alarmas cuando la app se inicia para gestionar migraciones
@@ -42,9 +44,8 @@ class AlarmasAppConfig(AppConfig):
 @repeat(every(1).minute)
 def procesar_alarmas_programadas():
     """
-        Procesa todas las "Alarma_Programada"s culla fecha de registro sea
+        Procesa todas las Alarma_Programadas culla fecha de registro sea <= now()
     """
-    print("[\033[33m%s\033[0m]: Procesando alarmas programadas" % ('AlarmasApp'))
     # Hacemos esto porque no podemos importarlos antes de que django cargue y ejecute las apps
     modelo_alarmas = apps.get_model('teleasistenciaApp', 'Alarma_Programada')
 
