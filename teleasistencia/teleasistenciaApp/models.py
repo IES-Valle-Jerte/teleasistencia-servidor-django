@@ -9,6 +9,52 @@ from asgiref.sync import async_to_sync
 
 # Create your models here.
 
+
+class Logs_AccionesUsuarios(models.Model):
+    """
+    Modelo que gaurdará todos los logs relativos a la api-rest.
+    """
+    METODOS_HTTP_ENUM = Choices("GET", "POST", "PUT", "DELETE")
+
+    timestamp = models.DateTimeField(null=False, default=now)
+    direccion_ip = models.CharField(null=False, max_length=40)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+
+    ruta = models.TextField(null=False, default="")
+    query = models.TextField(null=False, default="")
+    metodo_http = models.CharField(null=False, choices=METODOS_HTTP_ENUM, max_length=6)
+    estado_http = models.CharField(null=False, max_length=10)
+    # TODO: metadatos adicionales -> ubicacion, navegador, etc
+
+    def __str__(self):
+        return "[LOG_Accion] '%s' @ [%s] [%s] || %s %s %s => %s" % (
+            self.user.username, self.direccion_ip, self.timestamp,
+            self.metodo_http, self.ruta, self.query, self.estado_http
+        )
+
+class Logs_ConexionesUsuarios(models.Model):
+    """
+    Modelo que guarda los registros de todos los inicios de sesión e intentos de conexión al sistema.
+    """
+    TIPO_LOGIN_ENUM = Choices("PANEL_ADMIN", "TOKEN_API", "OTRO")
+
+    timestamp = models.DateTimeField(null=False, default=now)
+    direccion_ip = models.CharField(null=False, max_length=40)
+
+    username = models.CharField(null=False, max_length=150)
+    login_correcto = models.BooleanField(null=False, default=False)
+    tipo_login = models.CharField(null=False, choices=TIPO_LOGIN_ENUM, max_length=15)
+    # TODO: metadatos adicionales -> ubicacion, navegador, etc
+
+    def __str__(self):
+        return "[LOG_Sesion] '%s' @ [%s] [%s] || [%s] Login Correcto?: %s" % (
+            self.username, self.direccion_ip, self.timestamp,
+            self.tipo_login, self.login_correcto
+        )
+
+
+# timestamp: The time when the event occurred.
+
 # Creamos la clase imagen con los atributos usuario e imagen
 class Imagen_User(models.Model):
    user = models.OneToOneField(User, on_delete=models.CASCADE)
