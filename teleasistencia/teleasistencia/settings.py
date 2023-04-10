@@ -93,6 +93,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'teleasistenciaApp.middleware.LoggingMiddleware',
 ]
 
 #Definimos las  variables de configuración del CORS

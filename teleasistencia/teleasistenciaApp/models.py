@@ -27,8 +27,8 @@ class Logs_AccionesUsuarios(models.Model):
     # TODO: metadatos adicionales -> ubicacion, navegador, etc
 
     def __str__(self):
-        return "[LOG_Accion] '%s' @ [%s] [%s] || %s %s %s => %s" % (
-            self.user.username, self.direccion_ip, self.timestamp,
+        return "[LOG_Accion][%s] '%s' @ [%s] [%s] || %s %s%s => %s" % (
+            self.id, self.user.username, self.direccion_ip, self.timestamp,
             self.metodo_http, self.ruta, self.query, self.estado_http
         )
 
@@ -47,8 +47,8 @@ class Logs_ConexionesUsuarios(models.Model):
     # TODO: metadatos adicionales -> ubicacion, navegador, etc
 
     def __str__(self):
-        return "[LOG_Sesion] '%s' @ [%s] [%s] || [%s] Login Correcto?: %s" % (
-            self.username, self.direccion_ip, self.timestamp,
+        return "[LOG_Sesion][%s] '%s' @ [%s] [%s] || [%s] Login Correcto: %s" % (
+            self.id, self.username, self.direccion_ip, self.timestamp,
             self.tipo_login, self.login_correcto
         )
 
