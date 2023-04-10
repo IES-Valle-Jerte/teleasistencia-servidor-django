@@ -37,7 +37,7 @@ class AlarmasAppConfig(AppConfig):
         """
             Ejecuta en un hilo separado un bucle que mantiene ejecutando el scheduler
         """
-        hilo_tareas = threading.Thread(target=scheduler)
+        hilo_tareas = threading.Thread(target=scheduler, daemon=True)
         hilo_tareas.start()
 
 
