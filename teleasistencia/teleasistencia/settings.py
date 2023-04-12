@@ -12,13 +12,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 from datetime import timedelta
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Cargar ciertas variables desde variables de sistema o el fichero "BASE_DIR/.evn"
+load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -144,8 +145,6 @@ TEMPLATES = [
 ]
 
 ############# DJANGO REST SOCIAL AUTH WITH GOOGLE:
-
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # OAuth
@@ -170,8 +169,6 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=365),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=365),
     'AUTH_HEADER_TYPES': ('Bearer',),
-
-
 }
 
 
@@ -199,11 +196,6 @@ AUTHENTICATION_BACKENDS = (
 #]
 
 ##################FIN
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-
-
 
 
 
@@ -239,18 +231,24 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Password email reset
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_USE_TLS = True
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
