@@ -18,7 +18,7 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Cargar ciertas variables desde variables de sistema o el fichero "BASE_DIR/.evn"
+# Cargar ciertas variables desde variables de sistema o el fichero "BASE_DIR/.env"
 load_dotenv()
 
 # Quick-start development settings - unsuitable for production
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'channels',
     'django.contrib.admin',
     'django.contrib.auth',
+    #'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -153,9 +154,9 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 
-      'DEFAULT_PERMISSION_CLASSES': [
-          'rest_framework.permissions.IsAuthenticated',
-      ]
+    'DEFAULT_PERMISSION_CLASSES': [
+      'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 # Especificamos los timpos de validez del token
@@ -231,15 +232,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Password email reset
+# Password email reset (Fichero: BASE_DIR/.env)
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = os.getenv('EMAIL_PORT')
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL')
 
+PASSWORD_RESET_TIMEOUT_DAYS = 1
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
