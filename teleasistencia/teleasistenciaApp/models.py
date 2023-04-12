@@ -63,7 +63,7 @@ class Imagen_User(models.Model):
 
 class Tipo_Agenda(models.Model):
     nombre = models.CharField(max_length=200)
-    codigo = models.IntegerField()
+    codigo = models.CharField(max_length=100)
     IMPORTANCIA_ENUM = Choices("Alta","Baja")
     importancia = models.CharField(choices=IMPORTANCIA_ENUM, default=IMPORTANCIA_ENUM.Baja, max_length=20)
     def __str__(self):
@@ -154,7 +154,9 @@ class Paciente(models.Model):
 
 class Relacion_Paciente_Persona(models.Model):
     id_paciente = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL)
-    id_persona = models.ForeignKey(Persona, null=True, on_delete=models.SET_NULL)
+    nombre = models.CharField(max_length=200, null=False)
+    apellidos = models.CharField(max_length=200, null=False)
+    telefono = models.CharField(max_length=20, blank=True)
     tipo_relacion = models.CharField(max_length=200, null=False)
     tiene_llaves_vivienda = models.BooleanField(default=False, blank=True)
     disponibilidad = models.CharField(max_length=200, blank=True)
@@ -162,12 +164,10 @@ class Relacion_Paciente_Persona(models.Model):
     prioridad = models.IntegerField( blank=True)
     es_conviviente= models.BooleanField(default=False)
     def __str__(self):
-        if self.id_paciente and self.id_paciente.id_persona and self.id_persona:
-            return "Paciente:"+self.id_paciente.id_persona.nombre+" - Contacto:"+self.id_persona.nombre
-        elif self.id_paciente and self.id_paciente.id_persona :
-            return "Paciente:"+self.id_paciente.id_persona.nombre
-        elif self.id_persona:
-            return " - Contacto:"+self.id_persona.nombre
+        if self.id_paciente and self.id_paciente.id_persona:
+            return "Paciente: "+self.id_paciente.id_persona.nombre+" - Contacto: "+self.nombre+" "+self.apellidos
+        else:
+            return "Contacto: "+self.nombre+" "+self.apellidos
 
 
 class Tipo_Vivienda(models.Model):
@@ -177,7 +177,7 @@ class Tipo_Vivienda(models.Model):
 
 class Terminal(models.Model):
     numero_terminal = models.CharField(max_length=30, null=False)
-    id_titular = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL, blank=True)
+    id_titular = models.ForeignKey(Paciente, null=True, on_delete=models.PROTECT, blank=True)
     id_tipo_vivienda = models.ForeignKey(Tipo_Vivienda, null=True, on_delete=models.SET_NULL)
     modo_acceso_vivienda = models.CharField(max_length=400)
     barreras_arquitectonicas = models.CharField(max_length=5000, blank=True)
@@ -200,7 +200,6 @@ class Relacion_Terminal_Recurso_Comunitario(models.Model):
 class Agenda(models.Model):
     id_paciente = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL)
     id_tipo_agenda = models.ForeignKey(Tipo_Agenda, null=True, on_delete=models.SET_NULL)
-    id_persona = models.ForeignKey(Persona, null=True, on_delete=models.SET_NULL) #OJO: O bien Paciente o bien persona
     fecha_registro = models.DateTimeField(null=False, default=now)
     fecha_prevista = models.DateTimeField(null=False)
     fecha_resolucion = models.DateTimeField(null=True, blank=True)
