@@ -243,8 +243,7 @@ class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
         # Hacemos una búsqueda por los valores introducidos por parámetros
         query = getQueryAnd(request.GET)
         if query:
-            print (Tipo_Recurso_Comunitario.objects.filter(query))
-            queryset = Recurso_Comunitario.objects.filter(id_tipos_recurso_comunitario__in=Tipo_Recurso_Comunitario.objects.filter(query))
+            queryset = Recurso_Comunitario.objects.filter(query)
         # En el caso de que no hay parámetros y queramos devolver todos los valores
         else:
             queryset = self.get_queryset()
