@@ -9,7 +9,7 @@ class Consumer(WebsocketConsumer):
 
     # Función que se ejecutará cuando un WebSocket cliente trate de conectarse al servidor
     def connect(self):
-        print("llega aquI")
+        print(f"[\033[33mConsumer\033[0m]: Client connected")
         self.room_group_name = 'teleoperadores'
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
@@ -19,7 +19,7 @@ class Consumer(WebsocketConsumer):
 
     # Función que se ejecutará cuando un WebSocket cliente se desconecte del servidor
     def disconnect(self, code):
-        print(f"\033[33mClosed websocket with code: {code}\033[0m")
+        print(f"[\033[33mConsumer\033[0m]: Closed websocket with code: {code}\033[0m")
         async_to_sync(self.channel_layer.group_discard)(
             'teleoperadores',
             self.channel_name
@@ -31,6 +31,10 @@ class Consumer(WebsocketConsumer):
     def notify_clients(self, event):
         action = event['action']
         alarma = event['alarma']
+        print(f"[\033[33mConsumer\033[0m]: Notificando clientes: %s" % json.dumps({
+            'action': action,
+            'alarma': alarma
+        }))
         
         self.send(text_data=json.dumps({
             'action': action,

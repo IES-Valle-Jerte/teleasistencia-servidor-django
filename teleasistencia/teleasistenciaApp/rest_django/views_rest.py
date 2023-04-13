@@ -1148,7 +1148,7 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
 
         # Notificamos si es una asignación (el id_teleoperador era null y ahora no)
         if old_id is None and id_teleoperador is not None:
-            alarma.notify_clients('alarm_assignment')
+            alarma.notify('alarm_assignment')
 
         # Devolvemos la alarma modificada
         alarma_serializer = Alarma_Serializer(alarma)

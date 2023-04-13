@@ -247,12 +247,12 @@ class Alarma(models.Model):
         # Si no tiene asignada una cave primaria, es una nueva instancia
         if not self.pk:
             # Notificar a los clientes
-            self.notify_clients('new_alarm')
+            self.notify('new_alarm')
 
         # Ejecutar el resto del código original
         super(Alarma, self).save(*args, **kwargs)
         
-    def notify_clients(self, accion):
+    def notify(self, accion):
         from .rest_django.serializers import Alarma_Serializer
         
         alarma_serializer = Alarma_Serializer(self)
@@ -261,8 +261,6 @@ class Alarma(models.Model):
             'teleoperadores',
             {"type": "notify.clients", "action": accion, "alarma": alarma_serializer.data},
         )
-
-        print("""\033[33mNotificando cliente: "type": "notify.clients", "action": %s, "alarma": %s\033[0m"""  % (accion, alarma_serializer.data) )
 
      
 class Alarma_Programada(models.Model):
