@@ -962,7 +962,12 @@ class Paciente_ViewSet(viewsets.ModelViewSet):
         paciente_serializer = Paciente_Serializer(paciente)
         return Response(paciente_serializer.data)
 
-
+    def partial_update(self, request, *args, **kwargs):
+        paciente = Paciente.objects.get(pk=kwargs["pk"])
+        paciente.numero_seguridad_social = request.data.get("numero_seguridad_social")
+        paciente.save()
+        paciente_serializer = Paciente_Serializer(paciente)
+        return Response(paciente_serializer.data)
 
 
 class Tipo_Modalidad_Paciente_ViewSet(viewsets.ModelViewSet):
