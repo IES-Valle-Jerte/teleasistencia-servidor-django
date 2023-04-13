@@ -2,12 +2,14 @@ import signal
 import sys
 from django import dispatch
 
+from utilidad.logging import red
+
 # Django Signal custom para parar notificar a diversos procesos
 shutdown_signal = dispatch.Signal()
 
 def shutdown_handler(*args):
     # Para que funcione es CRUCIAL que ejecutemos el servidor con --noreload
-    print("[\033[33mDETENIENDO SERVIDOR\033[0m]: Deteniendo hilos...")
+    red('DETENINEDO SERVIDOR', 'Deteniendo hilos...')
     shutdown_signal.send(sender='system')
     sys.exit(0)
 

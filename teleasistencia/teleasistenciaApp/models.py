@@ -7,6 +7,8 @@ from django.contrib.auth.models import AbstractUser
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from utilidad.logging import info, error, blue
+
 # Create your models here.
 
 
@@ -290,9 +292,9 @@ class Alarma_Programada(models.Model):
             alarma_disparada.save()
             # Y borrar la programada
             self.delete()
-            print("\033[33m[ALARMA DISPARADA]: %s\033[0m" % (self))
+            blue("TeleasistenciaApp", f"Alarma Disparada: {self}")
         except Exception as e:
-            print(f"\033[33mHubo un error al disparar la alarma: {e}\033[0m")
+            error("TeleasistenciaApp", f"Hubo un error al disparar la alarma: {e}")
 
 class Persona_Contacto_En_Alarma(models.Model):
     id_alarma = models.ForeignKey(Alarma, null=True, on_delete=models.SET_NULL)

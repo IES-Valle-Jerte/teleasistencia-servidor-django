@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from .models import Logs_AccionesUsuarios, Logs_ConexionesUsuarios
-
+from utilidad.logging import yellow
 
 class LoggingMiddleware:
     """
@@ -39,7 +39,7 @@ def _log_request(request, response):
             )
             
             log.save()  # Guardar el log en la BBDD
-            print(f"[\033[33mLoggingMiddleware\033[0m]: %s" % log)
+            yellow("LoggingMiddleware", str(log))
 
     # Si es para un inicio de sesión, lo registramos en Logs_Sesiones
     # Registraremos cualquier tipo de inicio de sesión
@@ -67,7 +67,7 @@ def _log_request(request, response):
 
         if log.username is not None:
             log.save()  # Guardar el log en la BBDD
-            print("[\033[33mLoggingMiddleware\033[0m]: %s" % log)
+            yellow("LoggingMiddleware", str(log))
 
 
 def _extract_user(request):

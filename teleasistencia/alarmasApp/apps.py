@@ -7,7 +7,7 @@ from django.apps import AppConfig, apps
 from django.db.models import Q
 from django.utils.timezone import now
 
-from django.dispatch import receiver
+from utilidad.logging import info, red, green
 
 class AlarmasAppConfig(AppConfig):
     """
@@ -32,7 +32,7 @@ class AlarmasAppConfig(AppConfig):
         # ============= Cargar Alarmas Programadas =============
         try:
             procesar_alarmas_programadas()
-            print("[\033[33m%s\033[0m]: %s" % ('AlarmasApp', 'Procesadas alarmas pendientes'))
+            green("AlarmasApp", "Procesadas alarmas pendientes")
 
             # Iniciamos el sheduler para que gestione la tarea de las alarmas programadas
             self.parada_scheduler = self.run_scheduler(30) # Realentizamos el scheduler un poco
@@ -42,7 +42,7 @@ class AlarmasAppConfig(AppConfig):
 
         # Este try-catch es para evitar que se procesen las alarmas cuando la app se inicia para gestionar migraciones
         except Exception as e:
-            print(e)
+            info(e)
             self.stop_scheduler()  # Paramos el hilo
 
     def run_scheduler(self, intervalo=1):
@@ -78,7 +78,7 @@ class AlarmasAppConfig(AppConfig):
         if self.parada_scheduler is not None:
             self.parada_scheduler.set()
             self.scheduler_thread.join()
-            print("[\033[33m%s\033[0m]: %s" % ('AlarmasApp', 'Scheduler Detenido'))
+            red("AlarmasApp", "Scheduler Detenido")
 
 @repeat(every(1).minute)
 def procesar_alarmas_programadas():

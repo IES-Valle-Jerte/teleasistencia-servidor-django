@@ -30,6 +30,8 @@ from django.http import JsonResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from utilidad.logging import info, blue
+
 
 # Comprobamos si el usuario es profesor. Se utiliza para la discernir entre solicitudes de Profesor y Teleoperador
 class IsTeacherMember(permissions.BasePermission):
@@ -175,7 +177,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(user_serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        print(f"\033[33m{kwargs}\033[0m")
+        blue("TeleasistenciaApp", f"ViewsRest: {kwargs}")
         user = User.objects.get(pk=kwargs["pk"])
         try:
           image = Imagen_User.objects.get(user=user)
@@ -183,7 +185,7 @@ class UserViewSet(viewsets.ModelViewSet):
           if image.imagen is not None:
              os.remove(image.imagen.path)
         except:
-            print('\033[33m'+'error propio'+'\033[0m')
+            info("Error propio")
         user.delete()
         return Response('borrado')
 
