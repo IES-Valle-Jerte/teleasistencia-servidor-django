@@ -133,7 +133,6 @@ class Relacion_Paciente_Persona_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Relacion_Paciente_Persona
         fields = '__all__'
-        depth = 3
 
 
 class Paciente_Serializer(serializers.ModelSerializer):

@@ -627,12 +627,14 @@ class Relacion_Terminal_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
         # Comprobamos que existe el recurso comunitario
         id_recurso_comunitario = Recurso_Comunitario.objects.get(pk=request.data.get("id_recurso_comunitario"))
+        tiempo = request.data.get("tiempo_estimado")
         if id_recurso_comunitario is None:
             return Response("Error: id_recurso_comunitario")
 
         relacion_terminal_recurso_comunitario = Relacion_Terminal_Recurso_Comunitario(
             id_terminal=id_terminal,
-            id_recurso_comunitario=id_recurso_comunitario
+            id_recurso_comunitario=id_recurso_comunitario,
+            tiempo_estimado=tiempo
         )
 
         relacion_terminal_recurso_comunitario.save()
@@ -650,12 +652,14 @@ class Relacion_Terminal_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
         # Comprobamos que existe el recurso comunitario
         id_recurso_comunitario = Recurso_Comunitario.objects.get(pk=request.data.get("id_recurso_comunitario"))
+        tiempo = request.data.get("tiempo_estimado")
         if id_recurso_comunitario is None:
             return Response("Error: id_recurso_comunitario")
 
         relacion_terminal_recurso_comunitario = Relacion_Terminal_Recurso_Comunitario.objects.get(pk=kwargs["pk"])
         relacion_terminal_recurso_comunitario.id_terminal = id_terminal
         relacion_terminal_recurso_comunitario.id_recurso_comunitario = id_recurso_comunitario
+        relacion_terminal_recurso_comunitario.tiempo_estimado=tiempo
 
         relacion_terminal_recurso_comunitario.save()
 
@@ -849,63 +853,6 @@ class Relacion_Paciente_Persona_ViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        # Comprobamos que existe el paciente que recibimos como parametro get
-        id_paciente = Paciente.objects.get(pk=request.data.get("id_paciente"))
-        if id_paciente is None:
-            return Response("Error: id_paciente")
-        # Comprobamos que existe la persona
-        id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
-        if id_persona is None:
-            return Response("Error: id_persona")
-
-        # Creamos la relacion_paciente_persona
-        relacion_paciente_persona = Relacion_Paciente_Persona(
-            id_paciente=id_paciente,
-            id_persona=id_persona,
-            tipo_relacion=request.data.get("tipo_relacion"),
-            tiene_llaves_vivienda=request.data.get("tiene_llaves_vivienda"),
-            disponibilidad=request.data.get("disponibilidad"),
-            observaciones=request.data.get("observaciones"),
-            prioridad=request.data.get("prioridad")
-        )
-        relacion_paciente_persona.save()
-
-        # Devolvemos la relacion_paciente_persona creada
-        relacion_paciente_persona_serilizer = Relacion_Paciente_Persona_Serializer(relacion_paciente_persona)
-        return Response(relacion_paciente_persona_serilizer.data)
-
-    def update(self, request, *args, **kwargs):
-        # Comprobamos que existe el paciente
-        id_paciente = Paciente.objects.get(pk=request.data.get("id_paciente"))
-        if id_paciente is None:
-            return Response("Error: id_paciente")
-        # Comprobamos que existe la persona
-        id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
-        if id_persona is None:
-            return Response("Error: id_persona")
-
-        # Modificamos la relacion_paciente_persona
-        relacion_paciente_persona = Relacion_Paciente_Persona.objects.get(pk=kwargs["pk"])
-        if request.data.get("tipo_relacion") is not None:
-            relacion_paciente_persona.tipo_relacion = request.data.get("tipo_relacion")
-        if request.data.get("tiene_llaves_vivienda") is not None:
-            relacion_paciente_persona.tiene_llaves_vivienda = request.data.get("tiene_llaves_vivienda")
-        if request.data.get("disponibilidad") is not None:
-            relacion_paciente_persona.disponibilidad = request.data.get("disponibilidad")
-        if request.data.get("observaciones") is not None:
-            relacion_paciente_persona.observaciones = request.data.get("observaciones")
-        if request.data.get("prioridad") is not None:
-            relacion_paciente_persona.prioridad = request.data.get("prioridad")
-        relacion_paciente_persona.id_persona = id_persona
-        relacion_paciente_persona.id_paciente = id_paciente
-
-        relacion_paciente_persona.save()
-
-        # Devolvemos la relacion_paciente_persona modificada
-        relacion_paciente_persona_serilizer = Relacion_Paciente_Persona_Serializer(relacion_paciente_persona)
-        return Response(relacion_paciente_persona_serilizer.data)
 
 
 class Paciente_ViewSet(viewsets.ModelViewSet):
