@@ -61,6 +61,7 @@ router.register(r'paciente', views_rest.Paciente_ViewSet)
 router.register(r'tipo_modalidad_paciente', views_rest.Tipo_Modalidad_Paciente_ViewSet)
 router.register(r'recursos_comunitarios_en_alarma', views_rest.Recursos_Comunitarios_En_Alarma_ViewSet)
 router.register(r'alarma', views_rest.Alarma_ViewSet)
+router.register(r'alarma_programada', views_rest.Alarma_Programada_ViewSet)
 router.register(r'dispositivos_auxiliares_en_terminal', views_rest.Dispositivos_Auxiliares_en_Terminal_ViewSet)
 router.register(r'persona_contacto_en_alarma', views_rest.Persona_Contacto_En_Alarma_ViewSet)
 router.register(r'gestion_base_datos', views_rest.Gestion_Base_Datos_ViewSet)
@@ -85,6 +86,12 @@ urlpatterns = [
     #Django Rest Simple JWT:
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    #URLs de recuperación de contraseñas de usuarios de Django
+    path('password_reset/', views.PasswordResetView.as_view(), name='password_reset'),
+    path('password_reset/done/', views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]
 # añadimos el media url y el media root para poder visualizar las imagenes de usuario
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
