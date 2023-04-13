@@ -7,6 +7,8 @@ from django.apps import AppConfig, apps
 from django.db.models import Q
 from django.utils.timezone import now
 
+from django.dispatch import receiver
+
 class AlarmasAppConfig(AppConfig):
     """
     Documentación django signals: https://docs.djangoproject.com/en/3.2/topics/signals/
@@ -17,7 +19,8 @@ class AlarmasAppConfig(AppConfig):
     def __init__(self, app_name, app_module):
         super().__init__(app_name, app_module)
         # Atributos adicionales
-        self.parada_scheduler = None # threading.Event que nos permitirá parar el hilo
+        self.scheduler_thread = None  # threading.Thread que ejecuta el scheduler
+        self.parada_scheduler = None  # threading.Event que nos permitirá parar el hilo
 
     def ready(self):
         """
@@ -29,46 +32,53 @@ class AlarmasAppConfig(AppConfig):
         # ============= Cargar Alarmas Programadas =============
         try:
             procesar_alarmas_programadas()
-            print("[\033[33m%s\033[0m]: Procesadas alarmas pendientes" % ('AlarmasApp'))
+            print("[\033[33m%s\033[0m]: %s" % ('AlarmasApp', 'Procesadas alarmas pendientes'))
+
             # Iniciamos el sheduler para que gestione la tarea de las alarmas programadas
-            self.parada_scheduler = run_scheduler(49) # Realentizamos el scheduler
+            self.parada_scheduler = self.run_scheduler(30) # Realentizamos el scheduler un poco
             # Registramos el evento para que cuando django se esté cerrando, se pare el scheduler
-            # TODO
+            from teleasistencia import shutdown_signal
+            shutdown_signal.connect(self.stop_scheduler, sender='system')
 
         # Este try-catch es para evitar que se procesen las alarmas cuando la app se inicia para gestionar migraciones
-        except Exception:
-            # Paramos el hilo
-            if self.parada_scheduler is not None:
-                self.parada_scheduler.set()
+        except Exception as e:
+            print(e)
+            self.stop_scheduler()  # Paramos el hilo
 
+    def run_scheduler(self, intervalo=1):
+        """
+            Ejecuta en un hilo separado un bucle que mantiene ejecutando el scheduler,
+            cada `intervalo` comprobará si hay tareas pendientes (metodos marcados con @repeat).
 
-def run_scheduler(intervalo=1):
-    """
-        Ejecuta en un hilo separado un bucle que mantiene ejecutando el scheduler,
-        cada `intervalo` comprobará si hay tareas pendientes (metodos marcados con @repeat).
+            NOTA: El intervalo deberá ser igual o inferior al tiempo de repetición de la tarea más rápida.
+            Si tenemos una tarea que se ejecuta cada segundo, este deberá ser de 1.
 
-        NOTA: El intervalo deberá ser igual o inferior al tiempo de repetición de la tarea más rápida.
-        Si tenemos una tarea que se ejecuta cada segundo, este deberá ser de 1.
+            @param intervalo: tiempo en segundos
+            @return cease_continuous_run: threading.Event con el que podremos parar el hilo.
+        """
 
-        @param intervalo: tiempo en segundos
-        @return cease_continuous_run: threading.Event con el que podremos parar el hilo.
-    """
-    parar_scheduler = threading.Event()
+        # Devolvemos el evento con el que podemos parar el scheduler
+        parar_scheduler = threading.Event()
 
-    # Clase del hilo que ejecutará el scheduler
-    class ScheduleThread(threading.Thread):
-        @classmethod
-        def run(cls):
-            while not parar_scheduler.is_set():
-                schedule.run_pending()
-                time.sleep(intervalo)
+        # Clase del hilo que ejecutará el scheduler
+        class ScheduleThread(threading.Thread):
+            @classmethod
+            def run(cls):
+                while not parar_scheduler.is_set():
+                    schedule.run_pending()
+                    time.sleep(intervalo)
 
-    # Creamos el hilo
-    continuous_thread = ScheduleThread(daemon=True)
-    continuous_thread.start()
-    # Devolvemos el evento con el que podemos parar el scheduler
-    return parar_scheduler
+        # Creamos el hilo
+        self.scheduler_thread = ScheduleThread(daemon=True)
+        self.scheduler_thread.start()
 
+        return parar_scheduler
+
+    def stop_scheduler(self, **kwargs):
+        if self.parada_scheduler is not None:
+            self.parada_scheduler.set()
+            self.scheduler_thread.join()
+            print("[\033[33m%s\033[0m]: %s" % ('AlarmasApp', 'Scheduler Detenido'))
 
 @repeat(every(1).minute)
 def procesar_alarmas_programadas():
