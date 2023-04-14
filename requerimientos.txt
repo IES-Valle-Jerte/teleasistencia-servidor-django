@@ -11,5 +11,12 @@ django-cors-headers==3.13.0
 channels==3.0.4
 redis==4.3.3
 channels-redis==3.4.0
-Pillow
-
+# Windows - conexión base de datos Postgres
+psycopg2==2.8.6
+# Linux - conexión base de datos Postgres
+#psycopg2-binary==2.8.6
+schedule==1.1.0
+# Lee pares clave-valor de un archivo .env y puede configurarlos como variables de entorno
+python-dotenv==1.0.0
+# Permite el tratamiento de imágenes. Lo usamos para reducir las imágenes que se envian por api-rest
+Pillow==9.4.0

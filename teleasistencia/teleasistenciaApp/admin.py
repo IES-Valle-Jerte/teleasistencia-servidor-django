@@ -3,6 +3,8 @@ from django.contrib import admin
 from .models import *
 
 # Register your models here.
+admin.site.register(Logs_AccionesUsuarios)
+admin.site.register(Logs_ConexionesUsuarios)
 admin.site.register(Imagen_User)
 admin.site.register(Tipo_Agenda)
 admin.site.register(Direccion)
@@ -22,6 +24,7 @@ admin.site.register(Agenda)
 admin.site.register(Historico_Agenda_Llamadas)
 admin.site.register(Dispositivos_Auxiliares_En_Terminal )
 admin.site.register(Alarma)
+admin.site.register(Alarma_Programada)
 admin.site.register(Persona_Contacto_En_Alarma)
 admin.site.register(Recursos_Comunitarios_En_Alarma)
 admin.site.register(Tipo_Situacion)

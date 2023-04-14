@@ -3,7 +3,57 @@ from model_utils import Choices
 from django.utils.timezone import now
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 # Create your models here.
+
+
+class Logs_AccionesUsuarios(models.Model):
+    """
+    Modelo que gaurdará todos los logs relativos a la api-rest.
+    """
+    METODOS_HTTP_ENUM = Choices("GET", "POST", "PUT", "DELETE")
+
+    timestamp = models.DateTimeField(null=False, default=now)
+    direccion_ip = models.CharField(null=False, max_length=40)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+
+    ruta = models.TextField(null=False, default="")
+    query = models.TextField(null=False, default="")
+    metodo_http = models.CharField(null=False, choices=METODOS_HTTP_ENUM, max_length=6)
+    estado_http = models.CharField(null=False, max_length=10)
+    # TODO: metadatos adicionales -> ubicacion, navegador, etc
+
+    def __str__(self):
+        return "[LOG_Accion][%s] '%s' @ [%s] [%s] || %s %s%s => %s" % (
+            self.id, self.user.username, self.direccion_ip, self.timestamp,
+            self.metodo_http, self.ruta, self.query, self.estado_http
+        )
+
+class Logs_ConexionesUsuarios(models.Model):
+    """
+    Modelo que guarda los registros de todos los inicios de sesión e intentos de conexión al sistema.
+    """
+    TIPO_LOGIN_ENUM = Choices("PANEL_ADMIN", "TOKEN_API", "OTRO")
+
+    timestamp = models.DateTimeField(null=False, default=now)
+    direccion_ip = models.CharField(null=False, max_length=40)
+
+    username = models.CharField(null=False, max_length=150)
+    login_correcto = models.BooleanField(null=False, default=False)
+    tipo_login = models.CharField(null=False, choices=TIPO_LOGIN_ENUM, max_length=15)
+    # TODO: metadatos adicionales -> ubicacion, navegador, etc
+
+    def __str__(self):
+        return "[LOG_Sesion][%s] '%s' @ [%s] [%s] || [%s] Login Correcto: %s" % (
+            self.id, self.username, self.direccion_ip, self.timestamp,
+            self.tipo_login, self.login_correcto
+        )
+
+
+# timestamp: The time when the event occurred.
 
 # Creamos la clase imagen con los atributos usuario e imagen
 class Imagen_User(models.Model):
@@ -13,7 +63,7 @@ class Imagen_User(models.Model):
 
 class Tipo_Agenda(models.Model):
     nombre = models.CharField(max_length=200)
-    codigo = models.IntegerField()
+    codigo = models.CharField(max_length=100)
     IMPORTANCIA_ENUM = Choices("Alta","Baja")
     importancia = models.CharField(choices=IMPORTANCIA_ENUM, default=IMPORTANCIA_ENUM.Baja, max_length=20)
     def __str__(self):
@@ -104,7 +154,9 @@ class Paciente(models.Model):
 
 class Relacion_Paciente_Persona(models.Model):
     id_paciente = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL)
-    id_persona = models.ForeignKey(Persona, null=True, on_delete=models.SET_NULL)
+    nombre = models.CharField(max_length=200, null=False)
+    apellidos = models.CharField(max_length=200, null=False)
+    telefono = models.CharField(max_length=20, blank=True)
     tipo_relacion = models.CharField(max_length=200, null=False)
     tiene_llaves_vivienda = models.BooleanField(default=False, blank=True)
     disponibilidad = models.CharField(max_length=200, blank=True)
@@ -112,12 +164,10 @@ class Relacion_Paciente_Persona(models.Model):
     prioridad = models.IntegerField( blank=True)
     es_conviviente= models.BooleanField(default=False)
     def __str__(self):
-        if self.id_paciente and self.id_paciente.id_persona and self.id_persona:
-            return "Paciente:"+self.id_paciente.id_persona.nombre+" - Contacto:"+self.id_persona.nombre
-        elif self.id_paciente and self.id_paciente.id_persona :
-            return "Paciente:"+self.id_paciente.id_persona.nombre
-        elif self.id_persona:
-            return " - Contacto:"+self.id_persona.nombre
+        if self.id_paciente and self.id_paciente.id_persona:
+            return "Paciente: "+self.id_paciente.id_persona.nombre+" - Contacto: "+self.nombre+" "+self.apellidos
+        else:
+            return "Contacto: "+self.nombre+" "+self.apellidos
 
 
 class Tipo_Vivienda(models.Model):
@@ -127,7 +177,7 @@ class Tipo_Vivienda(models.Model):
 
 class Terminal(models.Model):
     numero_terminal = models.CharField(max_length=30, null=False)
-    id_titular = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL, blank=True)
+    id_titular = models.ForeignKey(Paciente, null=True, on_delete=models.PROTECT, blank=True)
     id_tipo_vivienda = models.ForeignKey(Tipo_Vivienda, null=True, on_delete=models.SET_NULL)
     modo_acceso_vivienda = models.CharField(max_length=400)
     barreras_arquitectonicas = models.CharField(max_length=5000, blank=True)
@@ -150,7 +200,6 @@ class Relacion_Terminal_Recurso_Comunitario(models.Model):
 class Agenda(models.Model):
     id_paciente = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL)
     id_tipo_agenda = models.ForeignKey(Tipo_Agenda, null=True, on_delete=models.SET_NULL)
-    id_persona = models.ForeignKey(Persona, null=True, on_delete=models.SET_NULL) #OJO: O bien Paciente o bien persona
     fecha_registro = models.DateTimeField(null=False, default=now)
     fecha_prevista = models.DateTimeField(null=False)
     fecha_resolucion = models.DateTimeField(null=True, blank=True)
@@ -193,6 +242,57 @@ class Alarma(models.Model):
             return self.id_tipo_alarma.nombre + " - " + self.estado_alarma + " - " + str(self.fecha_registro)
         else:
             return self.estado_alarma+ " - " + str(self.fecha_registro)
+        
+    def save(self, *args, **kwargs):
+        # Si no tiene asignada una cave primaria, es una nueva instancia
+        if not self.pk:
+            # Notificar a los clientes
+            self.notify('new_alarm')
+
+        # Ejecutar el resto del código original
+        super(Alarma, self).save(*args, **kwargs)
+        
+    def notify(self, accion):
+        from .rest_django.serializers import Alarma_Serializer
+        
+        alarma_serializer = Alarma_Serializer(self)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'teleoperadores',
+            {"type": "notify.clients", "action": accion, "alarma": alarma_serializer.data},
+        )
+
+     
+class Alarma_Programada(models.Model):
+    """
+    Plantilla para generar una alarma al ser disparada.
+    """
+    id_tipo_alarma = models.ForeignKey(Tipo_Alarma, null=True, on_delete=models.SET_NULL)
+    fecha_registro = models.DateTimeField(null=False, default=now) # Momento en el que la alarma se disparará
+    
+    id_paciente_ucr = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL, blank=True)  # OJO: Puede ser null si no lo avisó un paciente
+    id_terminal = models.ForeignKey(Terminal, null=True, on_delete=models.SET_NULL, blank=True)      # OJO: Puede ser null si no lo avisó un terminal
+    def __str__(self):
+        return "[Programada] %s - %s" % (self.id_tipo_alarma.nombre, str(self.fecha_registro))
+
+    def disparar(self):
+        """
+        Dispara y genera una Alarma a partir de los datos de la Alarma_Programada, borrando a esta última de la BBDD.
+        """
+        try:
+            # Guardar la alarma
+            alarma_disparada = Alarma(
+                id_tipo_alarma=self.id_tipo_alarma,
+                fecha_registro=self.fecha_registro,
+                id_paciente_ucr=self.id_paciente_ucr,
+                id_terminal=self.id_terminal
+            )
+            alarma_disparada.save()
+            # Y borrar la programada
+            self.delete()
+            print("\033[33m[ALARMA DISPARADA]: %s\033[0m" % (self))
+        except Exception as e:
+            print(f"\033[33mHubo un error al disparar la alarma: {e}\033[0m")
 
 class Persona_Contacto_En_Alarma(models.Model):
     id_alarma = models.ForeignKey(Alarma, null=True, on_delete=models.SET_NULL)

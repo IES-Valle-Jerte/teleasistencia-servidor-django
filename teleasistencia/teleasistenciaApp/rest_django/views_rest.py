@@ -175,7 +175,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(user_serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        print(kwargs)
+        print(f"\033[33m{kwargs}\033[0m")
         user = User.objects.get(pk=kwargs["pk"])
         try:
           image = Imagen_User.objects.get(user=user)
@@ -183,7 +183,7 @@ class UserViewSet(viewsets.ModelViewSet):
           if image.imagen is not None:
              os.remove(image.imagen.path)
         except:
-            print('error propio')
+            print('\033[33m'+'error propio'+'\033[0m')
         user.delete()
         return Response('borrado')
 
@@ -228,6 +228,18 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
     permission_classes = [IsTeacherMember]
 
+    # Obtenemos el listado de personas filtrado por los parametros GET
+    def list(self, request, *args, **kwargs):
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Tipo_Recurso_Comunitario.objects.filter(query)
+        # En el caso de que no hay parámetros y queramos devolver todos los valores
+        else:
+            queryset = self.get_queryset()
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     """
@@ -237,6 +249,19 @@ class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     serializer_class = Recurso_Comunitario_Serializer
 
     # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
+
+    # Obtenemos el listado de personas filtrado por los parametros GET
+    def list(self, request, *args, **kwargs):
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Recurso_Comunitario.objects.filter(query)
+        # En el caso de que no hay parámetros y queramos devolver todos los valores
+        else:
+            queryset = self.get_queryset()
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
 
@@ -627,12 +652,14 @@ class Relacion_Terminal_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
         # Comprobamos que existe el recurso comunitario
         id_recurso_comunitario = Recurso_Comunitario.objects.get(pk=request.data.get("id_recurso_comunitario"))
+        tiempo = request.data.get("tiempo_estimado")
         if id_recurso_comunitario is None:
             return Response("Error: id_recurso_comunitario")
 
         relacion_terminal_recurso_comunitario = Relacion_Terminal_Recurso_Comunitario(
             id_terminal=id_terminal,
-            id_recurso_comunitario=id_recurso_comunitario
+            id_recurso_comunitario=id_recurso_comunitario,
+            tiempo_estimado=tiempo
         )
 
         relacion_terminal_recurso_comunitario.save()
@@ -650,12 +677,14 @@ class Relacion_Terminal_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
         # Comprobamos que existe el recurso comunitario
         id_recurso_comunitario = Recurso_Comunitario.objects.get(pk=request.data.get("id_recurso_comunitario"))
+        tiempo = request.data.get("tiempo_estimado")
         if id_recurso_comunitario is None:
             return Response("Error: id_recurso_comunitario")
 
         relacion_terminal_recurso_comunitario = Relacion_Terminal_Recurso_Comunitario.objects.get(pk=kwargs["pk"])
         relacion_terminal_recurso_comunitario.id_terminal = id_terminal
         relacion_terminal_recurso_comunitario.id_recurso_comunitario = id_recurso_comunitario
+        relacion_terminal_recurso_comunitario.tiempo_estimado=tiempo
 
         relacion_terminal_recurso_comunitario.save()
 
@@ -752,6 +781,17 @@ class Historico_Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
     serializer_class = Historico_Tipo_Situación_Serializer
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
+    def list(self, request, *args, **kwargs):
+
+        queryset = self.filter_queryset(self.get_queryset())
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Historico_Tipo_Situacion.objects.filter(query)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
         # Comprobamos que el tipo situacion existe
         id_tipo_situacion = Tipo_Situacion.objects.get(pk=request.data.get("id_tipo_situacion"))
@@ -838,63 +878,6 @@ class Relacion_Paciente_Persona_ViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        # Comprobamos que existe el paciente que recibimos como parametro get
-        id_paciente = Paciente.objects.get(pk=request.data.get("id_paciente"))
-        if id_paciente is None:
-            return Response("Error: id_paciente")
-        # Comprobamos que existe la persona
-        id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
-        if id_persona is None:
-            return Response("Error: id_persona")
-
-        # Creamos la relacion_paciente_persona
-        relacion_paciente_persona = Relacion_Paciente_Persona(
-            id_paciente=id_paciente,
-            id_persona=id_persona,
-            tipo_relacion=request.data.get("tipo_relacion"),
-            tiene_llaves_vivienda=request.data.get("tiene_llaves_vivienda"),
-            disponibilidad=request.data.get("disponibilidad"),
-            observaciones=request.data.get("observaciones"),
-            prioridad=request.data.get("prioridad")
-        )
-        relacion_paciente_persona.save()
-
-        # Devolvemos la relacion_paciente_persona creada
-        relacion_paciente_persona_serilizer = Relacion_Paciente_Persona_Serializer(relacion_paciente_persona)
-        return Response(relacion_paciente_persona_serilizer.data)
-
-    def update(self, request, *args, **kwargs):
-        # Comprobamos que existe el paciente
-        id_paciente = Paciente.objects.get(pk=request.data.get("id_paciente"))
-        if id_paciente is None:
-            return Response("Error: id_paciente")
-        # Comprobamos que existe la persona
-        id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
-        if id_persona is None:
-            return Response("Error: id_persona")
-
-        # Modificamos la relacion_paciente_persona
-        relacion_paciente_persona = Relacion_Paciente_Persona.objects.get(pk=kwargs["pk"])
-        if request.data.get("tipo_relacion") is not None:
-            relacion_paciente_persona.tipo_relacion = request.data.get("tipo_relacion")
-        if request.data.get("tiene_llaves_vivienda") is not None:
-            relacion_paciente_persona.tiene_llaves_vivienda = request.data.get("tiene_llaves_vivienda")
-        if request.data.get("disponibilidad") is not None:
-            relacion_paciente_persona.disponibilidad = request.data.get("disponibilidad")
-        if request.data.get("observaciones") is not None:
-            relacion_paciente_persona.observaciones = request.data.get("observaciones")
-        if request.data.get("prioridad") is not None:
-            relacion_paciente_persona.prioridad = request.data.get("prioridad")
-        relacion_paciente_persona.id_persona = id_persona
-        relacion_paciente_persona.id_paciente = id_paciente
-
-        relacion_paciente_persona.save()
-
-        # Devolvemos la relacion_paciente_persona modificada
-        relacion_paciente_persona_serilizer = Relacion_Paciente_Persona_Serializer(relacion_paciente_persona)
-        return Response(relacion_paciente_persona_serilizer.data)
 
 
 class Paciente_ViewSet(viewsets.ModelViewSet):
@@ -1004,7 +987,12 @@ class Paciente_ViewSet(viewsets.ModelViewSet):
         paciente_serializer = Paciente_Serializer(paciente)
         return Response(paciente_serializer.data)
 
-
+    def partial_update(self, request, *args, **kwargs):
+        paciente = Paciente.objects.get(pk=kwargs["pk"])
+        paciente.numero_seguridad_social = request.data.get("numero_seguridad_social")
+        paciente.save()
+        paciente_serializer = Paciente_Serializer(paciente)
+        return Response(paciente_serializer.data)
 
 
 class Tipo_Modalidad_Paciente_ViewSet(viewsets.ModelViewSet):
@@ -1098,8 +1086,8 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
     API endpoint para las alarmas
     """
     #Constantes de notificación
-    ACTION_NEW_ALARM = 'new_alarm'
-    ACTION_ALARM_ASSIGNMENT = 'alarm_assignment'
+    # ACTION_NEW_ALARM = 'new_alarm'
+    # ACTION_ALARM_ASSIGNMENT = 'alarm_assignment'
 
     queryset = Alarma.objects.all()
     serializer_class = Alarma_Serializer
@@ -1138,9 +1126,6 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
 
             alarma.save()
 
-            # Enviamos notificación a los teleoperadores a través de la app alarmas
-            self.notify(alarma, self.ACTION_NEW_ALARM)
-
             # Devolvemos la alarma creada
             alarma_serializer = Alarma_Serializer(alarma)
             return Response(alarma_serializer.data)
@@ -1157,9 +1142,6 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
             )
 
             alarma.save()
-
-            # Enviamos notificación a los teleoperadores a través de la app alarmas
-            self.notify(alarma, self.ACTION_NEW_ALARM)
 
             # Devolvemos la alarma creada y notificamos a los clientes
             alarma_serializer = Alarma_Serializer(alarma)
@@ -1191,21 +1173,117 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
 
         # Notificamos si es una asignación (el id_teleoperador era null y ahora no)
         if old_id is None and id_teleoperador is not None:
-            self.notify(alarma, self.ACTION_ALARM_ASSIGNMENT)
+            alarma.notify('alarm_assignment')
 
         # Devolvemos la alarma modificada
         alarma_serializer = Alarma_Serializer(alarma)
         return Response(alarma_serializer.data)
 
+class Alarma_Programada_ViewSet(viewsets.ModelViewSet):
+    """
+        API endpoint para las alarmas programadas
+    """
 
-    def notify(self, alarma, accion):
-        alarma_serializer = Alarma_Serializer(alarma)
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            'teleoperadores',
-            {"type": "notify.clients", "action": accion, "alarma": alarma_serializer.data},
+    queryset = Alarma_Programada.objects.all()
+    serializer_class = Alarma_Programada_Serializer
+    # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Alarma_Programada.objects.filter(query)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # Definimos el metodo para crear la alarma programad
+    def create(self, request, *args, **kwargs):
+        # Comprobamos que existe id_tipo_alarma
+        id_tipo_alarma = Tipo_Alarma.objects.get(pk=request.data.get("id_tipo_alarma"))
+        if id_tipo_alarma is None:
+            return Response("Error: id_tipo_alarma")
+
+        # Comprobamos que hay una fecha/hora programada
+        # TODO: validar fecha y tratar con el desfase horario
+        fecha_registro = request.data.get("fecha_registro")
+        if fecha_registro is None:
+            return Response("Error: fecha_registro")
+
+        # Creamos la alarma, pero la guardaremos en el paso siguiente,
+        alarma_prog = Alarma_Programada(
+            id_tipo_alarma=id_tipo_alarma,
+            fecha_registro=fecha_registro
         )
 
+        # Como hay dos formas de crear una alarma, dependiendo el parametro que recibamos
+        # creamos la alarma de una forma u otra
+        if request.data.get("id_terminal") is not None:
+            id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
+            if id_terminal is None:
+                return Response("Error: id_terminal")
+
+            # Creo la alarma con id_terminal
+            alarma_prog.id_terminal = id_terminal
+            alarma_prog.save()
+
+            # Devolvemos la alarma creada
+            alarma_serializer = Alarma_Programada_Serializer(alarma_prog)
+            return Response(alarma_serializer.data)
+        elif request.data.get("id_paciente_ucr") is not None:
+            id_paciente_ucr = Paciente.objects.get(pk=request.data.get("id_paciente_ucr"))
+            if id_paciente_ucr is None:
+                return Response("Error: id_paciente_ucr")
+
+            # Creo la alarma con id_paciente_ucr
+            alarma_prog.id_paciente_ucr = id_paciente_ucr
+            alarma_prog.save()
+
+            # Devolvemos la alarma creada
+            alarma_serializer = Alarma_Programada_Serializer(alarma_prog)
+            return Response(alarma_serializer.data)
+
+    # TODO id_teleoperador se añade por JSON
+    # Permitimos que se pueda cambiar cualquier tipo de dato 
+    def update(self, request, *args, **kwargs):
+        # Obtenemos la alarma a modificar
+        alarma_prog = Alarma_Programada.objects.get(pk=kwargs["pk"])
+
+        if request.data.get("id_tipo_alarma") is not None:
+            # Si no existe en la BBDD, devolver un error
+            if Tipo_Alarma.objects.get(pk=request.data.get("id_tipo_alarma")) is None:
+                return Response("Error: id_tipo_alarma")
+            alarma_prog.id_tipo_alarma = request.data.get("id_tipo_alarma")
+
+        if request.data.get("fecha_registro") is not None:
+            # TODO: validar el formato de la fecha
+            alarma_prog.fecha_registro = request.data.get("fecha_registro")
+
+        # Caso alarma por UCR
+        if request.data.get("id_paciente_ucr") is not None:
+            id_paciente_ucr = Paciente.objects.get(pk=request.data.get("id_paciente_ucr"))
+            if id_paciente_ucr is None:
+                return Response("Error: id_paciente_ucr")
+
+            alarma_prog.id_paciente_ucr = id_paciente_ucr
+            alarma_prog.id_terminal = None
+
+        # Caso alarma por terminal
+        elif request.data.get("id_terminal") is not None:
+            id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
+            if id_terminal is None:
+                return Response("Error: id_terminal")
+
+            alarma_prog.id_terminal = id_terminal
+            alarma_prog.id_paciente_ucr = None
+
+        alarma_prog.save()
+
+        # Devolvemos la alarma modificada
+        alarma_serializer = Alarma_Programada_Serializer(alarma_prog)
+        return Response(alarma_serializer.data)
 
 class Dispositivos_Auxiliares_en_Terminal_ViewSet(viewsets.ModelViewSet):
     """

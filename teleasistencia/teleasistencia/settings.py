@@ -12,13 +12,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 from datetime import timedelta
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Cargar ciertas variables desde variables de sistema o el fichero "BASE_DIR/.env"
+load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -41,9 +42,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'/teleasistenciaApp')
 
 INSTALLED_APPS = [
     'channels',
-    'teleasistenciaApp.apps.TeleasistenciaappConfig' ,
     'django.contrib.admin',
     'django.contrib.auth',
+    #'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -61,7 +62,8 @@ INSTALLED_APPS = [
     # Para certificado https:
     "django_extensions",
 
-    #App para la notificación de alarmas
+    'teleasistenciaApp',
+    # App para la notificación de alarmas
     'alarmasApp'
 ]
 
@@ -93,6 +95,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'teleasistenciaApp.middleware.LoggingMiddleware',
 ]
 
 #Definimos las  variables de configuración del CORS
@@ -143,29 +146,30 @@ TEMPLATES = [
 ]
 
 ############# DJANGO REST SOCIAL AUTH WITH GOOGLE:
-
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # OAuth
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  # django-oauth-toolkit >= 1.0.0
         #'rest_framework_social_oauth2.authentication.SocialAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 
-      'DEFAULT_PERMISSION_CLASSES': [
-          'rest_framework.permissions.IsAuthenticated',
-      ]
+    'DEFAULT_PERMISSION_CLASSES': [
+      'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 # Especificamos los timpos de validez del token
 # Tambien el tipo de cabecera de ese token Bearer
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    # Lo más "correcto" es que el token de acceso tenga una duración relativamente
+    # corta, de unos minutos, para que no sea de mucho uso si es robado.
+    # Por otra parte, el token de refresco, sirve para obtener un nuevo token de accesow
+    # cuando este deje de ser válido, por lo que lo normal es que este dure significativamente más.
+    # TODO: hacer uso del refresh token en todos los clientes (revertir duración de los tokens)
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=365),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365),
     'AUTH_HEADER_TYPES': ('Bearer',),
-
-
 }
 
 
@@ -177,6 +181,7 @@ AUTHENTICATION_BACKENDS = (
         'rest_framework_social_oauth2.backends.DjangoOAuth2',
     # Django
     'django.contrib.auth.backends.ModelBackend',
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
 )
 
 #Redirección tras login OK POR OAUTH2 (ELIMINAR CUANDO SE COMPRUEBE QUE NO PETA)
@@ -192,11 +197,6 @@ AUTHENTICATION_BACKENDS = (
 #]
 
 ##################FIN
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-
-
 
 
 
@@ -232,18 +232,26 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Password email reset (Fichero: BASE_DIR/.env)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL')
+
+PASSWORD_RESET_TIMEOUT_DAYS = 1
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
