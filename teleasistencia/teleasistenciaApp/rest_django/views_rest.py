@@ -490,12 +490,12 @@ class Agenda_ViewSet(viewsets.ModelViewSet):
             return Response("Error: id_tipo_agenda")
 
         # Comprobamos que existe id_persona
-        id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
-        if id_persona is None:
-            return Response("Error: id_persona")
+        # id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
+        # if id_persona is None:
+        #    return Response("Error: id_persona")
 
         agenda = Agenda(
-            id_persona=id_persona,
+            # id_persona=id_persona,
             id_tipo_agenda=id_tipo_agenda,
             id_paciente=id_paciente,
             fecha_registro=request.data.get("fecha_registro"),
@@ -521,13 +521,13 @@ class Agenda_ViewSet(viewsets.ModelViewSet):
             return Response("Error: id_tipo_agenda")
 
         # Comprobamos que existe id_persona
-        id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
-        if id_persona is None:
-            return Response("Error: id_persona")
+        # id_persona = Persona.objects.get(pk=request.data.get("id_persona"))
+        # if id_persona is None:
+        #    return Response("Error: id_persona")
 
         agenda = Agenda.objects.get(pk=kwargs["pk"])
         agenda.id_tipo_agenda = id_tipo_agenda
-        agenda.id_persona = id_persona
+        # agenda.id_persona = id_persona
         agenda.id_paciente = id_paciente
         if request.data.get("fecha_registro") is not None:
             agenda.fecha_registro = request.data.get("fecha_registro")
@@ -751,6 +751,17 @@ class Historico_Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
     queryset = Historico_Tipo_Situacion.objects.all()
     serializer_class = Historico_Tipo_Situación_Serializer
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+
+        queryset = self.filter_queryset(self.get_queryset())
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Historico_Tipo_Situacion.objects.filter(query)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         # Comprobamos que el tipo situacion existe
