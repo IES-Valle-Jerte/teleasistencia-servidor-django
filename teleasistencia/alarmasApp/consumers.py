@@ -9,6 +9,10 @@ from utilidad.logging import magenta, cyan
 class Consumer(WebsocketConsumer):
 
     # Función que se ejecutará cuando un WebSocket cliente trate de conectarse al servidor
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.room_group_name = None
+
     def connect(self):
         magenta("Consumer", "Client connected")
         self.room_group_name = 'teleoperadores'
@@ -70,7 +74,6 @@ class ConsumerWebRTC(WebsocketConsumer):
         )
         self.close()
 
-
     def receive(self, text_data):
         # TODO: logging (magenta para conexiones)
         async_to_sync(self.channel_layer.group_send)(
@@ -81,6 +84,7 @@ class ConsumerWebRTC(WebsocketConsumer):
                 'sender_channel_name': self.channel_name
             },
         )
+
     def chat_message(self, event):
         # TODO: logging (magenta para conexiones)
         if self.channel_name != event['sender_channel_name']:

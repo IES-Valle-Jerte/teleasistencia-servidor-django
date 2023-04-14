@@ -87,10 +87,14 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    #URLs de recuperación de contraseñas de usuarios de Django
+    # URLs de recuperación de contraseñas de usuarios de Django (desde navegador)
+    # [password_reset_form.html] Aqui se hace la petición, enviando el correo que algún usuario (User) debe tener y un toquen que manda por GET)
     path('password_reset/', views.PasswordResetView.as_view(), name='password_reset'),
+    # [password_reset_done.html] Después del post, te redirige aquí para que sepas que la petición se ha gestionado
     path('password_reset/done/', views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    # [password_reset_confirm.html] A donde te manda el link recibido por correo
     path('reset/<uidb64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    # [password_reset_complete.html] Ventana de confirmación de cambio de contraseña
     path('reset/done/', views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]
 # añadimos el media url y el media root para poder visualizar las imagenes de usuario
