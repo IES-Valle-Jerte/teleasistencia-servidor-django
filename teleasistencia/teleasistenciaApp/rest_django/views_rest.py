@@ -228,6 +228,18 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
     permission_classes = [IsTeacherMember]
 
+    # Obtenemos el listado de personas filtrado por los parametros GET
+    def list(self, request, *args, **kwargs):
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = Tipo_Recurso_Comunitario.objects.filter(query)
+        # En el caso de que no hay parámetros y queramos devolver todos los valores
+        else:
+            queryset = self.get_queryset()
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     """
