@@ -69,7 +69,9 @@ INSTALLED_APPS = [
 
     'teleasistenciaApp',
     # App para la notificación de alarmas
-    'alarmasApp'
+    'alarmasApp.apps.AlarmasAppConfig',
+    # App para gestionar todos los tipos de eventos temporizados
+    'schedulerApp.apps.SchedulerAppConfig'
 ]
 
 ASGI_APPLICATION = 'teleasistencia.asgi.application'
