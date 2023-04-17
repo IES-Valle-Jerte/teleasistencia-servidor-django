@@ -25,6 +25,9 @@ from django.conf.urls.static import static
 from rest_framework import routers
 from teleasistenciaApp.rest_django import views_rest
 
+# Para recuperación de contraseñas
+from .views import get_csrf_token
+
 #Autenticación rest con JWT:
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -88,7 +91,8 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # URLs de recuperación de contraseñas de usuarios de Django (desde navegador)
-    # [password_reset_form.html] Aqui se hace la petición, enviando el correo que algún usuario (User) debe tener y un toquen que manda por GET)
+    path('password_reset/csrf', get_csrf_token, name='password_reset_csrf'),
+    # [password_reset_form.html] Aqui se hace la petición, enviando el correo que algún usuario (User) + token csrf)
     path('password_reset/', views.PasswordResetView.as_view(), name='password_reset'),
     # [password_reset_done.html] Después del post, te redirige aquí para que sepas que la petición se ha gestionado
     path('password_reset/done/', views.PasswordResetDoneView.as_view(), name='password_reset_done'),
@@ -99,3 +103,4 @@ urlpatterns = [
 ]
 # añadimos el media url y el media root para poder visualizar las imagenes de usuario
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
