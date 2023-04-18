@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from .models import Logs_AccionesUsuarios, Logs_ConexionesUsuarios
-from utilidad.logging import yellow
+from utilidad.logging import info, yellow
 
 class LoggingMiddleware:
     """
@@ -43,7 +43,7 @@ def _log_request(request, response):
 
     # Si es para un inicio de sesión, lo registramos en Logs_Sesiones
     # Registraremos cualquier tipo de inicio de sesión
-    elif request.path.startswith(('/admin/login/', '/api/token/', '/api-auth/')):
+    elif request.path.startswith(('/admin/login', '/api/token', '/api-auth')):
         # Crear el log
         log = Logs_ConexionesUsuarios(
             direccion_ip=request.META.get('REMOTE_ADDR'),
@@ -51,18 +51,17 @@ def _log_request(request, response):
         )
 
         path = request.path
+
         # Logins del panel de administración
-        if path.startswith('/admin/login/'):
+        if path.startswith('/admin/login'):
             log.tipo_login = log.TIPO_LOGIN_ENUM.PANEL_ADMIN
             log.login_correcto = (response.status_code == 302)
         # Logins por token
-        elif path.startswith('/api/token/'):
-            # TODO sacar user
+        elif path.startswith('/api/token'):
             log.tipo_login = log.TIPO_LOGIN_ENUM.TOKEN_API
             log.login_correcto = (response.status_code == 200)
         # Otros
         else:
-            # TODO sacar user
             log.tipo_login = log.TIPO_LOGIN_ENUM.OTRO
 
         if log.username is not None:
