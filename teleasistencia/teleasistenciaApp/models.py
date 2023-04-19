@@ -298,7 +298,7 @@ class Alarma_Programada(models.Model):
 
 class Persona_Contacto_En_Alarma(models.Model):
     id_alarma = models.ForeignKey(Alarma, null=True, on_delete=models.SET_NULL)
-    id_persona_contacto = models.ForeignKey(Persona, null=True, on_delete=models.SET_NULL)
+    id_persona_contacto = models.ForeignKey(Relacion_Paciente_Persona, null=True, on_delete=models.SET_NULL)
     fecha_registro = models.DateTimeField(null=False, default=now)
     def __str__(self):
         return self.id_alarma.id_tipo_alarma.nombre+" - "+self.id_alarma.estado_alarma+" - "+str(self.id_alarma.fecha_registro)+" "+self.id_persona_contacto.nombre+" - "+str(self.fecha_registro)

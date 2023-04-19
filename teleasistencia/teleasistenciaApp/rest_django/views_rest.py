@@ -616,7 +616,6 @@ class Historico_Agenda_Llamadas_ViewSet(viewsets.ModelViewSet):
         historico_agenda_llamada = Historico_Agenda_Llamadas(
             id_agenda=id_agenda,
             id_teleoperador=id_teleoperador,
-            fecha_llamada=request.data.get("fecha_llamada"),
             observaciones=request.data.get("observaciones")
         )
         historico_agenda_llamada.save()
@@ -1503,42 +1502,6 @@ class Gestion_Base_Datos_ViewSet(viewsets.ModelViewSet):
         #Respuesta de error por defecto.
         return Response("La copia de la base de datos con id: "+parametro+" seleccionada no existe.", status=status.HTTP_400_BAD_REQUEST)
 
-
-'''{
-               "id": "1",
-               "nombre": "pepe",
-               "apellido": "grillo",
-               "sexo": "Hombre",
-               "telefono": "664489164",
-               "localidad": "Plasencia",
-               "provincia": "Cáceres",
-               "centro_de_salud":" centro de slaud la data",
-               "Hospital":"Hospital de Plasencia",
-               "Guardia Civil":"Guardia civil de plasencia",
-               "Policia":"Policia Local Plasencia",
-               "Bomberos":"Bomberos de Plasencia",
-               "Servicios Sociales":"Servicios Sociales de Plasencia",
-               "Cruz Roja":"Cruz Roja de Plasencia",
-
-           },
-           {
-               "id": "1",
-               "nombre": "María",
-               "apellido": "Gil",
-               "sexo": "Mujer",
-               "telefono": "664428142",
-               "localidad": "Coria",
-               "provincia": "Cáceres",
-               "centro_de_salud": " centro de salud de Coria",
-               "Hospital": "Hospital de Coria",
-               "Guardia Civil": "Guardia civil de Coria",
-               "Policia": "Policia Local Coria",
-               "Bomberos": "Bomberos de Coria",
-               "Servicios Sociales": "Servicios Sociales de Coria",
-               "Cruz Roja": "Cruz Roja de Coria",
-
-               },
-               '''
 class DesarrolladorTecnologiaViewSet(viewsets.ModelViewSet):
     """
     API endpoint para las empresas
