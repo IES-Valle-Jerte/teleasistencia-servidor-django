@@ -29,6 +29,11 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = ['pk', 'name']
 
+class Clasificacion_Recurso_Comunitario_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Clasificacion_Recurso_Comunitario
+        fields = '__all__' #Indica todos los campos
+
 
 class Tipo_Recurso_Comunitario_Serializer(serializers.ModelSerializer):
     class Meta:
@@ -41,20 +46,6 @@ class Recurso_Comunitario_Serializer(serializers.ModelSerializer):
         model = Recurso_Comunitario
         fields = '__all__' #Indica todos los campos
         depth = 1
-
-
-class Centro_Sanitario_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Centro_Sanitario
-        fields = '__all__' #Indica todos los campos
-        depth = 1
-
-
-class Tipo_Centro_Sanitario_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tipo_Centro_Sanitario
-        fields = '__all__' #Indica todos los campos
-
 
 class Tipo_Alarma_Serializer(serializers.ModelSerializer):
     class Meta:
@@ -179,25 +170,12 @@ class Dispositivos_Auxiliares_en_Terminal_Serializer(serializers.ModelSerializer
         depth = 1
 
 
-class Centro_Sanitario_En_Alarma_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Centro_Sanitario_En_Alarma
-        fields = '__all__'
-        depth = 1
-
-
 class Persona_Contacto_En_Alarma_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Persona_Contacto_En_Alarma
         fields = '__all__'
         depth = 2
 
-
-class Relacion_Usuario_Centro_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Relacion_Usuario_Centro
-        fields = '__all__'
-        depth = 2
 
 class Tecnologia_Serializer(serializers.ModelSerializer):
     class Meta:
