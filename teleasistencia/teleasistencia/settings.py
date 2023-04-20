@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
 from datetime import timedelta
 
@@ -20,6 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Cargar ciertas variables desde variables de sistema o el fichero "BASE_DIR/.env"
 load_dotenv()
+
+# Añadir la carpeta utilidad al path the python para poder usarlo como una libreria instalada con pip
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(PROJECT_ROOT, 'utilidad'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -64,7 +69,9 @@ INSTALLED_APPS = [
 
     'teleasistenciaApp',
     # App para la notificación de alarmas
-    'alarmasApp'
+    'alarmasApp.apps.AlarmasAppConfig',
+    # App para gestionar todos los tipos de eventos temporizados
+    'schedulerApp.apps.SchedulerAppConfig'
 ]
 
 ASGI_APPLICATION = 'teleasistencia.asgi.application'
@@ -212,7 +219,6 @@ DATABASES = {
         'NAME': str(BASE_DIR / 'db.sqlite3'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
