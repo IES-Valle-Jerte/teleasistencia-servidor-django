@@ -12,9 +12,9 @@ class Migration(migrations.Migration):
 
     operations = [
 
-        migrations.RunSQL(
-            'DELETE FROM teleasistenciaApp_persona_contacto_en_alarma WHERE ID >0'
-        ),
+        #migrations.RunSQL(
+           # 'DELETE FROM teleasistenciaApp_persona_contacto_en_alarma WHERE ID >0'
+        #),
         migrations.AlterField(
             model_name='persona_contacto_en_alarma',
             name='id_persona_contacto',
