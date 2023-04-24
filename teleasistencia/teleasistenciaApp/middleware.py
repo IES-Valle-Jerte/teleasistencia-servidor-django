@@ -24,10 +24,8 @@ class LoggingMiddleware:
 
 
 def _log_request(request, response):
-    # Comprobamos si se está accediendo con un usuario del sistema (usando el token de autenticción)
-    if request.user.pk is not None:
         # Si es una petición a la API REST, lo registramos en Logs_AccionesUsuarios
-        if request.path.startswith('/api-rest/'):
+        if request.user.pk is not None and request.path.startswith('/api-rest/'):
             # Sacamos datos del usuario autorizado
             if _extract_user(request):
                 # Crear el log
