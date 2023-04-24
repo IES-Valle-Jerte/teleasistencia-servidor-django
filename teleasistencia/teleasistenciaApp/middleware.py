@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from .models import Logs_AccionesUsuarios, Logs_ConexionesUsuarios
-from utilidad.logging import info, yellow
+from utilidad.logging import info, error, yellow
 
 class LoggingMiddleware:
     """
@@ -17,56 +17,78 @@ class LoggingMiddleware:
     def __call__(self, request):
         # Procesar la petición
         response = self.get_response(request)
+
         # Si la petición está correctamente autorizada, loggearemos lo correspondiente
+        _extract_user(request)
         _log_request(request, response)
+
         # En caso de no estar autorizado, el SecurityMiddleware habrá dado una respuesta adecuada
         return response
 
 
 def _log_request(request, response):
-        # Si es una petición a la API REST, lo registramos en Logs_AccionesUsuarios
-        if request.user.pk is not None and request.path.startswith('/api-rest/'):
-            # Sacamos datos del usuario autorizado
-            if _extract_user(request):
-                # Crear el log
-                log = Logs_AccionesUsuarios(
-                    direccion_ip=request.META.get('REMOTE_ADDR'),
-                    user=request.user,
-                    ruta=request.path,
-                    query=request.scope['query_string'].decode(),
-                    metodo_http=request.method,
-                    estado_http=response.status_code,
-                )
+    path = request.path
+    # ############### Acciones ############### #
+    # Acciones realizadas en la Api-Rest
+    if path.startswith('/api-rest') and request.user.pk is not None:
+        log = Logs_AccionesUsuarios(
+            direccion_ip=request.META.get('REMOTE_ADDR'),
+            user=request.user,
+            ruta=request.path,
+            query=request.scope['query_string'].decode(),
+            metodo_http=request.method,
+            estado_http=response.status_code,
+        )
 
-                log.save()  # Guardar el log en la BBDD
-                yellow("LoggingMiddleware", str(log))
+        log.save()  # Guardar el log en la BBDD
+        yellow("LoggingMiddleware", str(log))
 
-        # Si es para un inicio de sesión, lo registramos en Logs_Sesiones
-        # Registraremos cualquier tipo de inicio de sesión
-        elif request.path.startswith(('/admin/login', '/api/token', '/api-auth')):
-            # Crear el log
-            log = Logs_ConexionesUsuarios(
-                direccion_ip=request.META.get('REMOTE_ADDR'),
-                username=request.POST.get('username'),
-            )
+    # ################ Logins ################ #
+    # Logins de la api-rest para obtener Token JWT
+    elif path.startswith('/api/token'):
+        # Manejar edgecase Postman VS App
+        username = request.POST.get('username') \
+            if request.user.pk is None \
+            else request.user.username
 
-            path = request.path
+        # Crear el log
+        log = Logs_ConexionesUsuarios(
+            direccion_ip=request.META.get('REMOTE_ADDR'),
+            username=username,
+            tipo_login=Logs_ConexionesUsuarios.TIPO_LOGIN_ENUM.TOKEN_API,
+            login_correcto=(response.status_code == 200),
+        )
 
-            # Logins del panel de administración
-            if path.startswith('/admin/login'):
-                log.tipo_login = log.TIPO_LOGIN_ENUM.PANEL_ADMIN
-                log.login_correcto = (response.status_code == 302)
-            # Logins por token
-            elif path.startswith('/api/token'):
-                log.tipo_login = log.TIPO_LOGIN_ENUM.TOKEN_API
-                log.login_correcto = (response.status_code == 200)
-            # Otros
-            else:
-                log.tipo_login = log.TIPO_LOGIN_ENUM.OTRO
+        log.save()  # Guardar el log en la BBDD
+        yellow("LoggingMiddleware", str(log))
 
-            if log.username is not None:
-                log.save()  # Guardar el log en la BBDD
-                yellow("LoggingMiddleware", str(log))
+    # Logins por panel de administración (las acciones se quedan registradas en otro lado)
+    elif path.startswith('/admin/login') and request.method == "POST":
+        # Crear el log
+        log = Logs_ConexionesUsuarios(
+            direccion_ip=request.META.get('REMOTE_ADDR'),
+            username=request.POST.get('username'),
+            tipo_login=Logs_ConexionesUsuarios.TIPO_LOGIN_ENUM.PANEL_ADMIN,
+            login_correcto=(response.status_code == 302),
+        )
+
+        log.save()  # Guardar el log en la BBDD
+        yellow("LoggingMiddleware", str(log))
+
+    # Otros tipos de login
+    elif path.startswith('/api-auth'):
+        # Crear el log
+        log = Logs_ConexionesUsuarios(
+            direccion_ip=request.META.get('REMOTE_ADDR'),
+            username=request.POST.get('username'),
+            tipo_login=Logs_ConexionesUsuarios.TIPO_LOGIN_ENUM.OTRO,
+        )
+
+        if log.username is not None:
+            log.save()  # Guardar el log en la BBDD
+            yellow("LoggingMiddleware", str(log))
+        else:
+            error("(logging auth) NO USERNAME: %s" % request.user)
 
 
 def _extract_user(request):
@@ -77,13 +99,16 @@ def _extract_user(request):
     Devuelve True o False dependiendo de si el token era válido o no.
     """
     try:
-        jwt_token = request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
-        # Descifrar el token y sacar el ID de usuario
-        payload = jwt.decode(jwt_token, settings.SECRET_KEY, algorithms=['HS256'])
-        user_id = payload.get('user_id')
+        if request.user.pk is None:
+            # Si falla esta linea, es que el middleware de autenticación ya se ejecutó y no es necesario
+            jwt_token = request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
+            # Descifrar el token y sacar el ID de usuario
+            payload = jwt.decode(jwt_token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = payload.get('user_id')
 
-        # Guardar el usuario si lo hemos conseguido extraer
-        request.user = User.objects.get(id=user_id)
+            # Guardar el usuario si lo hemos conseguido extraer
+            request.user = User.objects.get(id=user_id)
+
         return True
-    except InvalidTokenError | IndexError:
+    except (InvalidTokenError, IndexError):
         return False
