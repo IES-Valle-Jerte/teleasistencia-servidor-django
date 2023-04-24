@@ -24,49 +24,49 @@ class LoggingMiddleware:
 
 
 def _log_request(request, response):
-    # Si es una petición a la API REST, lo registramos en Logs_AccionesUsuarios
-    if request.path.startswith('/api-rest/'):
-        # Sacamos datos del usuario autorizado
-        if _extract_user(request):
+        # Si es una petición a la API REST, lo registramos en Logs_AccionesUsuarios
+        if request.user.pk is not None and request.path.startswith('/api-rest/'):
+            # Sacamos datos del usuario autorizado
+            if _extract_user(request):
+                # Crear el log
+                log = Logs_AccionesUsuarios(
+                    direccion_ip=request.META.get('REMOTE_ADDR'),
+                    user=request.user,
+                    ruta=request.path,
+                    query=request.scope['query_string'].decode(),
+                    metodo_http=request.method,
+                    estado_http=response.status_code,
+                )
+
+                log.save()  # Guardar el log en la BBDD
+                yellow("LoggingMiddleware", str(log))
+
+        # Si es para un inicio de sesión, lo registramos en Logs_Sesiones
+        # Registraremos cualquier tipo de inicio de sesión
+        elif request.path.startswith(('/admin/login', '/api/token', '/api-auth')):
             # Crear el log
-            log = Logs_AccionesUsuarios(
+            log = Logs_ConexionesUsuarios(
                 direccion_ip=request.META.get('REMOTE_ADDR'),
-                user=request.user,
-                ruta=request.path,
-                query=request.scope['query_string'].decode(),
-                metodo_http=request.method,
-                estado_http=response.status_code,
+                username=request.POST.get('username'),
             )
-            
-            log.save()  # Guardar el log en la BBDD
-            yellow("LoggingMiddleware", str(log))
 
-    # Si es para un inicio de sesión, lo registramos en Logs_Sesiones
-    # Registraremos cualquier tipo de inicio de sesión
-    elif request.path.startswith(('/admin/login', '/api/token', '/api-auth')):
-        # Crear el log
-        log = Logs_ConexionesUsuarios(
-            direccion_ip=request.META.get('REMOTE_ADDR'),
-            username=request.POST.get('username'),
-        )
+            path = request.path
 
-        path = request.path
+            # Logins del panel de administración
+            if path.startswith('/admin/login'):
+                log.tipo_login = log.TIPO_LOGIN_ENUM.PANEL_ADMIN
+                log.login_correcto = (response.status_code == 302)
+            # Logins por token
+            elif path.startswith('/api/token'):
+                log.tipo_login = log.TIPO_LOGIN_ENUM.TOKEN_API
+                log.login_correcto = (response.status_code == 200)
+            # Otros
+            else:
+                log.tipo_login = log.TIPO_LOGIN_ENUM.OTRO
 
-        # Logins del panel de administración
-        if path.startswith('/admin/login'):
-            log.tipo_login = log.TIPO_LOGIN_ENUM.PANEL_ADMIN
-            log.login_correcto = (response.status_code == 302)
-        # Logins por token
-        elif path.startswith('/api/token'):
-            log.tipo_login = log.TIPO_LOGIN_ENUM.TOKEN_API
-            log.login_correcto = (response.status_code == 200)
-        # Otros
-        else:
-            log.tipo_login = log.TIPO_LOGIN_ENUM.OTRO
-
-        if log.username is not None:
-            log.save()  # Guardar el log en la BBDD
-            yellow("LoggingMiddleware", str(log))
+            if log.username is not None:
+                log.save()  # Guardar el log en la BBDD
+                yellow("LoggingMiddleware", str(log))
 
 
 def _extract_user(request):
