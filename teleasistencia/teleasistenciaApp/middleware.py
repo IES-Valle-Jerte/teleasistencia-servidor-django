@@ -50,7 +50,8 @@ def _log_request(request, response):
         username = request.POST.get('username') \
             if request.user.pk is None \
             else request.user.username
-
+        print ("-----------------")
+        print (request.user)
         # Crear el log
         log = Logs_ConexionesUsuarios(
             direccion_ip=request.META.get('REMOTE_ADDR'),
@@ -58,7 +59,6 @@ def _log_request(request, response):
             tipo_login=Logs_ConexionesUsuarios.TIPO_LOGIN_ENUM.TOKEN_API,
             login_correcto=(response.status_code == 200),
         )
-
         log.save()  # Guardar el log en la BBDD
         yellow("LoggingMiddleware", str(log))
 

@@ -62,6 +62,24 @@ class Imagen_User(models.Model):
    user = models.OneToOneField(User, on_delete=models.CASCADE)
    imagen = models.ImageField(upload_to='imagen_usuario', null=True, blank=True, default="")
 
+# Creamos la clase que almacena la relación entre el usuario y la base de datos a la que pertenece
+class Database(models.Model):
+    nameDescritive = models.CharField(max_length=200)
+    engine = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
+    user = models.CharField(max_length=100, blank=True, null=True)
+    password = models.CharField(max_length=200, blank=True, null=True)
+    host = models.CharField(max_length=200, blank=True, null=True)
+    port = models.IntegerField(blank=True, null=True)
+    def __str__(self):
+        return self.nameDescritive+": "+self.name+" - "+self.engine
+
+class Database_User(models.Model):
+   user = models.OneToOneField(User, on_delete=models.CASCADE)
+   database = models.ForeignKey(Database, on_delete=models.CASCADE)
+
+   def __str__(self):
+        return self.user.username+" - "+self.database.name
 
 class Tipo_Agenda(models.Model):
     nombre = models.CharField(max_length=200)
@@ -369,5 +387,3 @@ class Desarrollador_Tecnologia(models.Model):
     id_tecnologia = models.ForeignKey(Tecnologia, null=True, on_delete=models.SET_NULL, related_name='tecnologias')
     def __str__(self):
         return self.id_desarrollador.nombre+ " - "+self.id_tecnologia.nombre
-
-

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import json
 from pathlib import Path
 import os
 import sys
@@ -17,6 +17,8 @@ from dotenv import load_dotenv
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from typing_extensions import OrderedDict
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Cargar ciertas variables desde variables de sistema o el fichero "BASE_DIR/.env"
@@ -213,13 +215,26 @@ WSGI_APPLICATION = 'teleasistencia.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(BASE_DIR / 'db.sqlite3'),
-    }
-}
+# Obtenemos los datos de conexión de la base de datos de la variable .env
+#En el caso de encontrar algún archvio sqlite3 actualizamos la ruta
+database =""
+if (os.getenv('DATABASES')):
+    database = json.loads(os.getenv('DATABASES'))
+    for data in database:
+        if "sqlite" in database[data]["ENGINE"]:
+            # Añadirmos la ruta absoluta en la que se encuentra la base de datos
+            database[data]["NAME"] = str(BASE_DIR / database[data]["NAME"])
 
+# Comprobamos si se ha cargado bien la base de datos sino cargamos la de por defecto
+if database:
+    DATABASES = database
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(BASE_DIR / 'db.sqlite3'),
+        }
+    }
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
