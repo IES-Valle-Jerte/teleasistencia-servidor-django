@@ -29,8 +29,11 @@ class LoggingMiddleware:
 
 
 def log_request(request, req_body, response):
+    # ##############  Ignorados ############## #
+    if request.path.startswith(('api-rest/password_reset/', 'api-rest/reset/')):
+        pass
     # ################ Logins ################ #
-    if request.path.startswith(('/api/token', '/admin/login', '/api-auth')):
+    elif request.path.startswith(('/api/token', '/admin/login', '/api-auth')):
         _log_loging_request(request, req_body, response)
     # ############### Acciones ############### #
     else:
