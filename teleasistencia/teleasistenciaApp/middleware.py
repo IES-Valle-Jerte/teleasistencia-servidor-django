@@ -1,9 +1,11 @@
 import jwt
-import json
 from jwt.exceptions import InvalidTokenError
 
 from django.conf import settings
 from django.contrib.auth.models import User
+
+import json
+from urllib.parse import parse_qs
 
 from .models import Logs_AccionesUsuarios, Logs_ConexionesUsuarios
 from utilidad.logging import info, error, yellow
@@ -65,14 +67,17 @@ def _log_loging_request(request, req_body, response):
     # ################ Logins ################ #
     # Logins de la api-rest para obtener Token JWT
     if path.startswith('/api/token'):
-        # Postman envia los datos como JSON, android como URLencoded y Angular ni idea
-
-        error(req_body)
-        req_body = json.loads(req_body)
-
-        log.username = req_body.get('username')
         log.tipo_login = Logs_ConexionesUsuarios.TIPO_LOGIN_ENUM.TOKEN_API
         log.login_correcto = (response.status_code == 200)
+
+        # Postman y Angular envia los datos como JSON, android como URLencoded
+        # Intentar parsear a los distintos tipos de dato
+        try:
+            req_body = json.loads(req_body)
+            log.username = req_body.get('username')
+        except ValueError:
+            req_body = parse_qs(req_body)
+            log.username = req_body.get('username', [None])[0]
 
         log.save()  # Guardar el log en la BBDD
         yellow("LoggingMiddleware", str(log))
