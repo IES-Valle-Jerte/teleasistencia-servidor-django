@@ -95,11 +95,14 @@ class UserViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         # Hacemos una búsqueda por los valores introducidos por parámetros
         query = getQueryAnd(request.GET)
+
+        database_user =Database_User.objects.get(user=request.user)
+        database_user_selected =Database_User.objects.filter(database=database_user.database)
         if query:
-            queryset = User.objects.filter(query)
+            queryset = User.objects.filter(id__in = [database_u.user.id for database_u in database_user_selected]).filter(query)
         # En el caso de que no hay parámetros y queramos devolver todos los valores
         else:
-            queryset = self.get_queryset()
+            queryset = User.objects.filter(id__in = [database_u.user.id for database_u in database_user_selected])
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -126,6 +129,15 @@ class UserViewSet(viewsets.ModelViewSet):
         # Encriptamos la contraseña
         user.set_password(request.data.get("password"))
         user.save()
+
+        # El usuario nuevo se crea asociado a la misma base de datos que el que lo crea
+        database_user =Database_User.objects.get(user=request.user)
+        database_user_new = Database_User(
+            user=user,
+            database=database_user.database
+        )
+        database_user_new.save()
+
         user.groups.add(id_groups)
 
         if request.FILES:
@@ -140,15 +152,14 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(user_serializer.data)
 
     def update(self, request, *args, **kwargs):
-        # TODO comprobar si un usuario (no-profesor) puede modificar sus datos
-        # Comprobamos que existe el groups
-        id_groups = Group.objects.get(pk=request.data.get("groups"))
-        if id_groups is None:
-            return Response("Error: Groups")
 
         user = User.objects.get(pk=kwargs["pk"])
-        user.groups.clear()
-        user.groups.add(id_groups)
+        # Comprobamos que existe el groups
+        if request.data.get("groups") is not None:
+            id_groups = Group.objects.get(pk=request.data.get("groups"))
+            user.groups.clear()
+            user.groups.add(id_groups)
+
         if request.data.get("username") is not None:
             user.username = request.data.get("username")
         if request.data.get("email") is not None:
@@ -156,6 +167,10 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.data.get("password") is not None:
             # Encriptamos la contraseña
             user.set_password(request.data.get("password"))
+        if request.data.get("first_name") is not None:
+            user.first_name = request.data.get("first_name")
+        if request.data.get("last_name") is not None:
+            user.last_name = request.data.get("last_name")
         user.save()
         if request.FILES:
             img = request.FILES["imagen"]
@@ -220,6 +235,7 @@ class Clasificacion_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
     permission_classes = [IsTeacherMember]
 
+
 class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     """
     API endpoint para las empresas
@@ -233,12 +249,14 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     # Obtenemos el listado de personas filtrado por los parametros GET
     def list(self, request, *args, **kwargs):
         # Hacemos una búsqueda por los valores introducidos por parámetros
+
+        database_user =Database_User.objects.get(user=request.user)
         query = getQueryAnd(request.GET)
         if query:
-            queryset = Tipo_Recurso_Comunitario.objects.filter(query)
+            queryset = self.queryset.using(database_user.database.nameDescritive).filter(query)
         # En el caso de que no hay parámetros y queramos devolver todos los valores
         else:
-            queryset = self.get_queryset()
+            queryset = self.queryset.using(database_user.database.nameDescritive)
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -712,14 +730,16 @@ class Terminal_ViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         # Comprobamos que existe id_tipo_vivienda
-        id_tipo_vivienda = Tipo_Vivienda.objects.get(pk=request.data.get("id_tipo_vivienda"))
-        if id_tipo_vivienda is None:
-            return Response("Error: id_tipo_vivienda")
+        if request.data.get("id_tipo_vivienda"):
+            id_tipo_vivienda = Tipo_Vivienda.objects.get(pk=request.data.get("id_tipo_vivienda"))
+        else:
+            id_tipo_vivienda = None
 
         # Comprobamos que existe el id_titular
-        id_titular = Paciente.objects.get(pk=request.data.get("id_titular"))
-        if id_titular is None:
-            return Response("Error: id_titular")
+        if request.data.get("id_titular"):
+            id_titular = Paciente.objects.get(pk=request.data.get("id_titular"))
+        else:
+            id_titular = None
 
         terminal = Terminal(
             numero_terminal=request.data.get("numero_terminal"),
@@ -899,9 +919,11 @@ class Paciente_ViewSet(viewsets.ModelViewSet):
     # Creamos el paciente
     def create(self, request, *args, **kwargs):
         # Comprobamos que existe el id_terminal
-        id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
-        if id_terminal is None:
-            return Response("Error: id_terminal")
+
+        if request.data.get("id_terminal"):
+            id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
+        else:
+            id_terminal = None
 
         # Comprobamos que existe id_tipo_modalidad_paciente
         id_modalidad_paciente = Tipo_Modalidad_Paciente.objects.get(pk=request.data.get("id_tipo_modalidad_paciente"))
