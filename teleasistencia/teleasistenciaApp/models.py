@@ -125,7 +125,7 @@ class Database_User(models.Model):
    database = models.ForeignKey(Database, on_delete=models.CASCADE)
 
    def __str__(self):
-        return self.user.username+" - "+self.database.name
+        return self.database.nameDescritive+": "+self.user.username+" - "+self.database.name
 
 class Tipo_Agenda(models.Model):
     nombre = models.CharField(max_length=200)
@@ -229,6 +229,7 @@ class Relacion_Paciente_Persona(models.Model):
     observaciones = models.CharField(max_length=4000, blank=True)
     prioridad = models.IntegerField( blank=True)
     es_conviviente= models.BooleanField(default=False)
+    tiempo_domicilio = models.IntegerField(default=1)
     def __str__(self):
         if self.id_paciente and self.id_paciente.id_persona:
             return "Paciente: "+self.id_paciente.id_persona.nombre+" - Contacto: "+self.nombre+" "+self.apellidos
