@@ -19,7 +19,7 @@ class LoggingMiddleware:
 
     def __call__(self, request):
         # Guardar el body porque no puede ser accedido después de procesar la petición
-        req_body = request.body.decode().strip()
+        req_body = request.body
         # Procesar la petición y loggear (si es necesario)
         response = self.get_response(request)
         log_request(request, req_body, response)
@@ -61,6 +61,7 @@ def _log_action_request(request, response):
 
 def _log_loging_request(request, req_body, response):
     path = request.path
+    req_body = req_body.decode().strip()
 
     # Crear el log
     log = Logs_ConexionesUsuarios(

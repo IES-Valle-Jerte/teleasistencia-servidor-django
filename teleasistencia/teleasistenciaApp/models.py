@@ -1,13 +1,21 @@
+import os
 from django.db import models
 from model_utils import Choices
 from django.utils.timezone import now
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from utilidad.logging import info, error, blue
+
+# Para tratamiento de imagenes
+from io import BytesIO
+from PIL import Image
+from django.core.files import File
+from django.core.files.base import ContentFile
 
 # Create your models here.
 
@@ -55,12 +63,50 @@ class Logs_ConexionesUsuarios(models.Model):
         )
 
 
-# timestamp: The time when the event occurred.
-
 # Creamos la clase imagen con los atributos usuario e imagen
 class Imagen_User(models.Model):
-   user = models.OneToOneField(User, on_delete=models.CASCADE)
-   imagen = models.ImageField(upload_to='imagen_usuario', null=True, blank=True, default="")
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    imagen = models.ImageField(upload_to='imagen_usuario', null=True, blank=True, default="")
+
+    def save(self, *args, **kwargs):
+        # Si se ha actualizado (no nueva), borrar la imagen vieja.
+        instancia_vieja = Imagen_User.objects.filter(pk=self.pk).first()
+        if instancia_vieja and instancia_vieja.imagen != self.imagen:
+            if os.path.exists(instancia_vieja.imagen.path):
+                os.remove(instancia_vieja.imagen.path)
+
+        # Intentamos minificar la imagen
+        try:
+            self._minificar()
+        except Exception as e:
+            error(f"Fallo al intentar minificar imagen: {e}")
+
+        # Dejamos que django termine de persistir el modelo
+        super(Imagen_User, self).save(*args, **kwargs)
+
+    def _minificar(self):
+        """
+        Minifica la imagen para ahorrar espacio y aligerar la carga del servidor
+        """
+        if self.imagen:
+            # Sacar ajustes de calidad de imagen
+            size = settings.MINIFICATION_SIZE
+            quality = settings.MINIFICATION_QUALITY
+
+            # Abrimos la imagen con Pillow, pasamos a RGB (para JPEG) y minificamos
+            # Lo abrimos con un ContentFile, porque el fichero está en memoria y no en disco
+            img = Image.open(ContentFile(self.imagen.read())).convert('RGB')
+            img.thumbnail(size)
+
+            # Creamos un buffer donde escribir la imagen transformada
+            img_bytes = BytesIO()
+            img.save(img_bytes, format='JPEG', quality=quality, optimize=True)
+            img_bytes.seek(0)  # Mover el cursor al principio
+
+            # Guardamos el buffer a un fichero
+            filename = f"{self.user.username}.jpg"
+            self.imagen.save(filename, File(img_bytes, name=filename), save=False)
+
 
 # Creamos la clase que almacena la relación entre el usuario y la base de datos a la que pertenece
 class Database(models.Model):
