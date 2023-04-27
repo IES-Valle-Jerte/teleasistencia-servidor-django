@@ -312,12 +312,15 @@ class Alarma(models.Model):
         
     def save(self, *args, **kwargs):
         # Si no tiene asignada una cave primaria, es una nueva instancia
-        if not self.pk:
-            # Notificar a los clientes
-            self.notify('new_alarm')
+        is_new = self.pk is None
 
         # Ejecutar el resto del código original
         super(Alarma, self).save(*args, **kwargs)
+        
+        # Si es nuevo, notificar
+        if not is_new:
+            # Notificar a los clientes
+            self.notify('new_alarm')
         
     def notify(self, accion):
         from .rest_django.serializers import Alarma_Serializer
