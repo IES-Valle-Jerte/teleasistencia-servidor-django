@@ -1387,7 +1387,7 @@ class Persona_Contacto_En_Alarma_ViewSet(viewsets.ModelViewSet):
             return Response("Error: id_alarma")
 
         # Comprobamos que existe la persona de contacto
-        id_persona_contacto = Persona.objects.get(pk=request.data.get("id_persona_contacto"))
+        id_persona_contacto = Relacion_Paciente_Persona.objects.get(pk=request.data.get("id_persona_contacto"))
         if id_persona_contacto is None:
             return Response("Error: id_persona_contacto")
 
@@ -1395,7 +1395,6 @@ class Persona_Contacto_En_Alarma_ViewSet(viewsets.ModelViewSet):
             id_alarma=id_alarma,
             id_persona_contacto=id_persona_contacto,
             fecha_registro=request.data.get("fecha_registro"),
-            acuerdo_alcanzado=request.data.get("acuerdo_alcanzado")
         )
 
         persona_contacto_en_alarma.save()
@@ -1410,7 +1409,7 @@ class Persona_Contacto_En_Alarma_ViewSet(viewsets.ModelViewSet):
             return Response("Error: id_alarma")
 
         # Comprobamos que existe la persona de contacto
-        id_persona_contacto = Persona.objects.get(pk=request.data.get("id_persona_contacto"))
+        id_persona_contacto = Relacion_Paciente_Persona.objects.get(pk=request.data.get("id_persona_contacto"))
         if id_persona_contacto is None:
             return Response("Error: id_persona_contacto")
 
@@ -1419,8 +1418,6 @@ class Persona_Contacto_En_Alarma_ViewSet(viewsets.ModelViewSet):
         persona_contacto_en_alarma.id_persona_contacto = id_persona_contacto
         if request.data.get("fecha_registro") is not None:
             persona_contacto_en_alarma.fecha_registro = request.data.get("fecha_registro")
-        if request.data.get("acuerdo_alcanzado") is not None:
-            persona_contacto_en_alarma.acuerdo_alcanzado = request.data.get("acuerdo_alcanzado")
 
         persona_contacto_en_alarma.save()
 
