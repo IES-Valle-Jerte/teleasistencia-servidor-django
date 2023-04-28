@@ -318,7 +318,7 @@ class Alarma(models.Model):
         super(Alarma, self).save(*args, **kwargs)
         
         # Si es nuevo, notificar
-        if not is_new:
+        if is_new:
             # Notificar a los clientes
             self.notify('new_alarm')
         

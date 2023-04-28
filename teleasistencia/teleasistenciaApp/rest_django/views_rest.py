@@ -1270,7 +1270,7 @@ class Alarma_Programada_ViewSet(viewsets.ModelViewSet):
             # Si no existe en la BBDD, devolver un error
             if Tipo_Alarma.objects.get(pk=request.data.get("id_tipo_alarma")) is None:
                 return Response("Error: id_tipo_alarma")
-            alarma_prog.id_tipo_alarma = request.data.get("id_tipo_alarma")
+            alarma_prog.id_tipo_alarma = Tipo_Alarma.objects.get(pk=request.data.get("id_tipo_alarma"))
 
         if request.data.get("fecha_registro") is not None:
             # TODO: validar el formato de la fecha
