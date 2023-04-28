@@ -53,30 +53,34 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs["pk"])
+
         if request.data.get("email") is not None:
             user.email = request.data.get("email")
         if request.data.get("password") is not None:
             # Encriptamos la contraseña
             user.set_password(request.data.get("password"))
-        user.save()
-        # si se modifican Files es decir la imagen
+
+        # Si se modifican FILES es que hay una imagen
         if request.FILES:
-            #obtengo la imagem eue me modifican
+            # Extraer la imagen que han subido
             img = request.FILES["imagen"]
-            image = Imagen_User.objects.filter(user=user).first()
-            #Si ya tenia imagen borro la anterior y la guardo add al usuario
-            if image:
-                if (image.imagen) is not None:
-                    os.remove(image.imagen.path)
-                image.imagen = img
-                image.save()
-            #Si no tenia imagen se la añado al usuario
+
+            # Si el usuario ya tenia otra borro la anterior y la guardo
+            user_image = Imagen_User.objects.filter(user=user).first()
+            if user_image:
+                user_image.imagen = img
+
+            # Si no tenia imagen se la añado al usuario
             else:
-                image = Imagen_User(
+                user_image = Imagen_User(
                     user=user,
                     imagen=img
                 )
-            image.save()
+
+            # Guardar cambios
+            user_image.save()
+
+        user.save()
 
         # Devolvemos el user modificado con su imagen
         user_serializer = self.get_serializer(user, many=False)
