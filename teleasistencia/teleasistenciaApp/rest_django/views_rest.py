@@ -1067,8 +1067,6 @@ class Recursos_Comunitarios_En_Alarma_ViewSet(viewsets.ModelViewSet):
         # Creamos recursos_comunitarios_en_alarma
         recursos_comunitarios_en_alarma = Recursos_Comunitarios_En_Alarma(
             fecha_registro=request.data.get("fecha_registro"),
-            persona=request.data.get("persona"),
-            acuerdo_alcanzado=request.data.get("acuerdo_alcanzado"),
             id_alarma=id_alarma,
             id_recurso_comunitario=id_recurso_comunitario
         )
@@ -1094,10 +1092,6 @@ class Recursos_Comunitarios_En_Alarma_ViewSet(viewsets.ModelViewSet):
         recursos_comunitarios_en_alarma = Recursos_Comunitarios_En_Alarma.objects.get(pk=kwargs["pk"])
         if request.data.get("fecha_registro") is not None:
             recursos_comunitarios_en_alarma.fecha_registro = request.data.get("fecha_registro")
-        if request.data.get("persona") is not None:
-            recursos_comunitarios_en_alarma.persona = request.data.get("persona")
-        if request.data.get("acuerdo_alcanzado") is not None:
-            recursos_comunitarios_en_alarma.acuerdo_alcanzado = request.data.get("acuerdo_alcanzado")
         recursos_comunitarios_en_alarma.id_alarma = id_alarma
         recursos_comunitarios_en_alarma.id_recurso_comunitario = id_recurso_comunitario
 
