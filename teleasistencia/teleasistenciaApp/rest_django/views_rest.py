@@ -135,7 +135,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
 
         # El usuario nuevo se crea asociado a la misma base de datos que el que lo crea
-        database_user =Database_User.objects.get(user=request.user)
+        database_user = Database_User.objects.get(user=request.user)
         database_user_new = Database_User(
             user=user,
             database=database_user.database
@@ -153,6 +153,9 @@ class UserViewSet(viewsets.ModelViewSet):
             image.save()
         # Devolvemos el user creado
         user_serializer = self.get_serializer(user, many=False)
+
+        # MULTIDATABASE: Para las multibase de datos creamos el usuario en la nueva base e datos
+        user.save(using=database_user.database.nameDescritive)
         return Response(user_serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -206,6 +209,13 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             info("Error propio")
         user.delete()
+
+
+        # MULTIDATABASE: Para las multibase de datos creamos el usuario en la nueva base e datos
+        database_user = Database_User.objects.get(user=request.user)
+        user = User.objects.using(database_user.database.nameDescritive).get(pk=kwargs["pk"])
+        user.delete()
+
         return Response('borrado')
 
 
@@ -321,20 +331,26 @@ class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
             (pk=request.data.get("id_tipos_recurso_comunitario"))
         if tipos_recurso_comunitario is None:
             return Response("Error: tipos_recurso_comunitario")
+        recurso_comunitario = Recurso_Comunitario.objects.get(pk=kwargs["pk"])
 
         # Obtenemos los datos de dirección y los almacenamos
-        direccion_serializer = Direccion_Serializer(data=request.data.get("id_direccion"))
-        if direccion_serializer.is_valid():
-            direccion = direccion_serializer.save()
-        else:
+        if recurso_comunitario.id_direccion is None:
             return Response("Error: direccion")
+        else:
+            # Mejor forma de actualizar un objeto
+            direccion_actualizada = Direccion_Serializer(recurso_comunitario.id_direccion, data = request.data.get("id_direccion"), partial=True)
+            if direccion_actualizada.is_valid():
+                direccion = direccion_actualizada.save()
+            else:
+                return Response("Error: direccion")
+
+        #else:
+        #    direccion.id = recurso_comunitario.id_direccion.id
 
         # Modificamos el centro sanitario con el tipo de centro y la dirección
-        recurso_comunitario = Recurso_Comunitario.objects.get(pk=kwargs["pk"])
         recurso_comunitario.nombre = request.data.get("nombre")
         recurso_comunitario.telefono = request.data.get("telefono")
         recurso_comunitario.id_tipos_recurso_comunitario = tipos_recurso_comunitario
-        recurso_comunitario.id_direccion = direccion
 
         recurso_comunitario.save()
         # Devolvemos los datos
@@ -350,6 +366,19 @@ class Tipo_Alarma_ViewSet(viewsets.ModelViewSet):
     permission_classes = [IsTeacherMember]
 
     # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
+
+    # Obtenemos el listado de personas filtrado por los parametros GET
+    def list(self, request, *args, **kwargs):
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        query = getQueryAnd(request.GET)
+        if query:
+            queryset = self.serializer_class.Meta.model.objects.filter(query)
+        # En el caso de que no hay parámetros y queramos devolver todos los valores
+        else:
+            queryset = self.get_queryset()
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         # Comprobamos que el tipo de centro sanitario existe
@@ -1054,8 +1083,6 @@ class Recursos_Comunitarios_En_Alarma_ViewSet(viewsets.ModelViewSet):
         # Creamos recursos_comunitarios_en_alarma
         recursos_comunitarios_en_alarma = Recursos_Comunitarios_En_Alarma(
             fecha_registro=request.data.get("fecha_registro"),
-            persona=request.data.get("persona"),
-            acuerdo_alcanzado=request.data.get("acuerdo_alcanzado"),
             id_alarma=id_alarma,
             id_recurso_comunitario=id_recurso_comunitario
         )
@@ -1081,10 +1108,6 @@ class Recursos_Comunitarios_En_Alarma_ViewSet(viewsets.ModelViewSet):
         recursos_comunitarios_en_alarma = Recursos_Comunitarios_En_Alarma.objects.get(pk=kwargs["pk"])
         if request.data.get("fecha_registro") is not None:
             recursos_comunitarios_en_alarma.fecha_registro = request.data.get("fecha_registro")
-        if request.data.get("persona") is not None:
-            recursos_comunitarios_en_alarma.persona = request.data.get("persona")
-        if request.data.get("acuerdo_alcanzado") is not None:
-            recursos_comunitarios_en_alarma.acuerdo_alcanzado = request.data.get("acuerdo_alcanzado")
         recursos_comunitarios_en_alarma.id_alarma = id_alarma
         recursos_comunitarios_en_alarma.id_recurso_comunitario = id_recurso_comunitario
 

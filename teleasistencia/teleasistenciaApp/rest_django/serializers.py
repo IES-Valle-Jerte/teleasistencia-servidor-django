@@ -39,6 +39,15 @@ class Tipo_Recurso_Comunitario_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Tipo_Recurso_Comunitario
         fields = '__all__' #Indica todos los campos
+    def create(self, validated_data):
+        database_user =Database_User.objects.get(user=self.context["request"].user)
+        return self.Meta.model.objects.db_manager(database_user.database.nameDescritive).create(**validated_data)
+    '''
+    def update(self, instance, validated_data):
+        database_user =Database_User.objects.get(user=self.context["request"].user)
+        cambios =Tipo_Recurso_Comunitario.objects.db_manager(database_user.database.nameDescritive).filter(id=instance.id).update(**validated_data)
+        return cambios
+    '''
 
 
 class Recurso_Comunitario_Serializer(serializers.ModelSerializer):
