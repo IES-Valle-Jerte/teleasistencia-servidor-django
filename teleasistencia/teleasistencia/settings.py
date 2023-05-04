@@ -41,7 +41,7 @@ ALLOWED_HOSTS = ['10.0.2.2','localhost','127.0.0.1','192.168.0.12','*']
 
 #Definimos el media root y medias url para que el servidor pueda mostrar la imagen
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR,'/teleasistenciaApp')
+MEDIA_ROOT =  os.path.join(BASE_DIR,'teleasistenciaApp')
 
 # Ancho y Alto
 MINIFICATION_SIZE = (100, 100)
