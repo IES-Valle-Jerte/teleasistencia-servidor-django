@@ -135,7 +135,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
 
         # El usuario nuevo se crea asociado a la misma base de datos que el que lo crea
-        database_user =Database_User.objects.get(user=request.user)
+        database_user = Database_User.objects.get(user=request.user)
         database_user_new = Database_User(
             user=user,
             database=database_user.database
@@ -153,6 +153,9 @@ class UserViewSet(viewsets.ModelViewSet):
             image.save()
         # Devolvemos el user creado
         user_serializer = self.get_serializer(user, many=False)
+
+        # MULTIDATABASE: Para las multibase de datos creamos el usuario en la nueva base e datos
+        user.save(using=database_user.database.nameDescritive)
         return Response(user_serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -206,6 +209,13 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             info("Error propio")
         user.delete()
+
+
+        # MULTIDATABASE: Para las multibase de datos creamos el usuario en la nueva base e datos
+        database_user = Database_User.objects.get(user=request.user)
+        user = User.objects.using(database_user.database.nameDescritive).get(pk=kwargs["pk"])
+        user.delete()
+
         return Response('borrado')
 
 
