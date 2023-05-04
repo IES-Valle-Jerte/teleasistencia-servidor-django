@@ -321,20 +321,26 @@ class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
             (pk=request.data.get("id_tipos_recurso_comunitario"))
         if tipos_recurso_comunitario is None:
             return Response("Error: tipos_recurso_comunitario")
+        recurso_comunitario = Recurso_Comunitario.objects.get(pk=kwargs["pk"])
 
         # Obtenemos los datos de dirección y los almacenamos
-        direccion_serializer = Direccion_Serializer(data=request.data.get("id_direccion"))
-        if direccion_serializer.is_valid():
-            direccion = direccion_serializer.save()
-        else:
+        if recurso_comunitario.id_direccion is None:
             return Response("Error: direccion")
+        else:
+            # Mejor forma de actualizar un objeto
+            direccion_actualizada = Direccion_Serializer(recurso_comunitario.id_direccion, data = request.data.get("id_direccion"), partial=True)
+            if direccion_actualizada.is_valid():
+                direccion = direccion_actualizada.save()
+            else:
+                return Response("Error: direccion")
+
+        #else:
+        #    direccion.id = recurso_comunitario.id_direccion.id
 
         # Modificamos el centro sanitario con el tipo de centro y la dirección
-        recurso_comunitario = Recurso_Comunitario.objects.get(pk=kwargs["pk"])
         recurso_comunitario.nombre = request.data.get("nombre")
         recurso_comunitario.telefono = request.data.get("telefono")
         recurso_comunitario.id_tipos_recurso_comunitario = tipos_recurso_comunitario
-        recurso_comunitario.id_direccion = direccion
 
         recurso_comunitario.save()
         # Devolvemos los datos
