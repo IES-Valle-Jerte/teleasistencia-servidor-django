@@ -247,7 +247,6 @@ class Clasificacion_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     serializer_class = Clasificacion_Recurso_Comunitario_Serializer
     # Habría que descomentar la siguiente línea para permitir las acciones sólo a los usuarios autenticados (Authorization en la petición POST)
     # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
-    permission_classes = [IsTeacherMember]
 
 
 class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
@@ -428,7 +427,6 @@ class Clasificacion_Alarma_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Clasificacion_Alarma.objects.all()
     serializer_class = Clasificacion_Alarma_Serializer
-    permission_classes = [IsTeacherMember]
     # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
 
 
