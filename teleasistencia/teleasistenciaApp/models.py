@@ -434,6 +434,6 @@ class Tecnologia(models.Model):
 class Desarrollador_Tecnologia(models.Model):
     # Related name nos permite obtener los datos relacionados desde la entidad a la que hace referencia
     id_desarrollador = models.ForeignKey(Desarrollador, null=True, on_delete=models.SET_NULL, related_name='desarrollador_tecnologias')
-    id_tecnologia = models.ForeignKey(Tecnologia, null=True, on_delete=models.SET_NULL, related_name='tecnologias')
+    id_tecnologia = models.ForeignKey(Tecnologia, null=True, on_delete=models.SET_NULL)
     def __str__(self):
         return self.id_desarrollador.nombre+ " - "+self.id_tecnologia.nombre
