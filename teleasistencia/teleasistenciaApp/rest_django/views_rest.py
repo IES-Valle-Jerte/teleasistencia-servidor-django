@@ -1225,6 +1225,37 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
         alarma_serializer = Alarma_Serializer(alarma)
         return Response(alarma_serializer.data)
 
+class Alarma_Cancelar_ViewSet(viewsets.ModelViewSet):
+
+    queryset = Alarma.objects.all()
+    serializer_class = Alarma_Serializer
+    http_method_names=['put']
+
+    # Definimos el metodo para cacelar la alarma
+    def update(self, request, *args, **kwargs):
+        # Obtenemos la alarma a modificar
+        alarma = Alarma.objects.get(pk=kwargs["pk"])
+
+        # Comprobamos si la alarma no la ha cogido ningún teleoperador
+        id_teleoperador = alarma.id_teleoperador
+        if id_teleoperador:
+            return Response("Info: La alarma ya la está gestionando un teleoperador, no se puede cancelar", 400)
+
+        if  alarma.estado_alarma == "Cerrada":
+            return Response("Error: La alarma ya está cerrada", 405)
+
+        alarma.estado_alarma = "Cerrada"
+        alarma.resumen = "La alarma a sido resuelta por el usuario a través de una pulsación voluntaria"
+
+        alarma.save()
+
+        # Notificamos si es una asignación (el id_teleoperador era null y ahora no)
+        alarma.notify('alarm_auto_resolve')
+
+        # Devolvemos la alarma modificada
+        alarma_serializer = Alarma_Serializer(alarma)
+        return Response(alarma_serializer.data)
+
 class Alarma_Programada_ViewSet(viewsets.ModelViewSet):
     """
         API endpoint para las alarmas programadas
