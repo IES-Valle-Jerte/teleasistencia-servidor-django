@@ -14,6 +14,8 @@ from datetime import datetime
 
 from django.contrib.auth.models import User, Group, Permission
 from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
+
 from rest_framework import viewsets
 from rest_framework import status
 # Serializadores generales
@@ -252,6 +254,14 @@ class Clasificacion_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Clasificacion_Recurso_Comunitario.objects.all()
     serializer_class = Clasificacion_Recurso_Comunitario_Serializer
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
     # Habría que descomentar la siguiente línea para permitir las acciones sólo a los usuarios autenticados (Authorization en la petición POST)
     # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
 
@@ -264,7 +274,14 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     serializer_class = Tipo_Recurso_Comunitario_Serializer
     # Habría que descomentar la siguiente línea para permitir las acciones sólo a los usuarios autenticados (Authorization en la petición POST)
     # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
-    permission_classes = [IsTeacherMember]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
 
     # Obtenemos el listado de personas filtrado por los parametros GET
     def list(self, request, *args, **kwargs):
@@ -369,7 +386,14 @@ class Tipo_Alarma_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Tipo_Alarma.objects.all()
     serializer_class = Tipo_Alarma_Serializer
-    permission_classes = [IsTeacherMember]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
 
     # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
 
@@ -434,6 +458,14 @@ class Clasificacion_Alarma_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Clasificacion_Alarma.objects.all()
     serializer_class = Clasificacion_Alarma_Serializer
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
     # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
 
 
@@ -1050,7 +1082,14 @@ class Tipo_Modalidad_Paciente_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Tipo_Modalidad_Paciente.objects.all()
     serializer_class = Tipo_Modalidad_Paciente_Serializer
-    permission_classes = [IsTeacherMember]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
 
