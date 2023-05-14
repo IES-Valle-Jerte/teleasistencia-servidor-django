@@ -209,23 +209,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         blue("TeleasistenciaApp", f"ViewsRest: {kwargs}")
-        user = User.objects.get(pk=kwargs["pk"])
         try:
-          image = Imagen_User.objects.get(user=user)
+            user = User.objects.get(pk=kwargs["pk"])
+            # Drop de Database_User y Imagen_User se hacen en cascada
+            user.delete()
 
-          if image.imagen is not None:
-             os.remove(image.imagen.path)
+            return Response('Se ha eliminado correctamente')
+        except User.DoesNotExist:
+            return Response('Error: No existe ningún usuario con esa id', 405)
         except:
-            info("Error propio",405)
-        user.delete()
-
-
-        # MULTIDATABASE: Para las multibase de datos creamos el usuario en la nueva base e datos
-        database_user = Database_User.objects.get(user=request.user)
-        user = User.objects.using(database_user.database.nameDescritive).get(pk=kwargs["pk"])
-        user.delete()
-
-        return Response('borrado')
+            return Response('Error interno');
 
 
 class PermissionViewSet(viewsets.ModelViewSet):
