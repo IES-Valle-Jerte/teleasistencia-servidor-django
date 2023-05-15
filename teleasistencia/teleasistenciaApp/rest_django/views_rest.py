@@ -839,6 +839,8 @@ class Terminal_ViewSet(viewsets.ModelViewSet):
             terminal.modo_acceso_vivienda = request.data.get("modo_acceso_vivienda")
         if request.data.get("barreras_arquitectonicas") is not None:
             terminal.barreras_arquitectonicas = request.data.get("barreras_arquitectonicas")
+        if request.data.get("modelo_terminal") is not None:
+            terminal.modelo_terminal=request.data.get("modelo_terminal")
 
         terminal.save()
 
@@ -919,7 +921,14 @@ class Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Tipo_Situacion.objects.all()
     serializer_class = Tipo_Situacion_Serializer
-    permission_classes = [IsTeacherMember]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
 
@@ -929,7 +938,14 @@ class Tipo_Vivienda_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Tipo_Vivienda.objects.all()
     serializer_class = Tipo_Vivienda_Serializer
-    permission_classes = [IsTeacherMember]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
 
@@ -1069,6 +1085,18 @@ class Paciente_ViewSet(viewsets.ModelViewSet):
         paciente.save()
         paciente_serializer = Paciente_Serializer(paciente)
         return Response(paciente_serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        #Conseguimos el parametro de la URL
+        paciente = Paciente.objects.get(pk=kwargs["pk"])
+        terminal = Terminal.objects.get(pk=paciente.id_terminal.id)
+        persona = Persona.objects.get(pk=paciente.id_persona.id)
+        if persona is not None:
+            persona.delete()
+        if terminal is not None:
+            terminal.delete()
+        paciente.delete()
+        return Response("")
 
 
 class Tipo_Modalidad_Paciente_ViewSet(viewsets.ModelViewSet):
