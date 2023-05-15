@@ -926,7 +926,14 @@ class Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Tipo_Situacion.objects.all()
     serializer_class = Tipo_Situacion_Serializer
-    permission_classes = [IsTeacherMember]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
 
@@ -936,7 +943,14 @@ class Tipo_Vivienda_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Tipo_Vivienda.objects.all()
     serializer_class = Tipo_Vivienda_Serializer
-    permission_classes = [IsTeacherMember]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
 
