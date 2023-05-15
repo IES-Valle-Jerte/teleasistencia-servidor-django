@@ -863,13 +863,12 @@ class Historico_Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-
         queryset = self.filter_queryset(self.get_queryset())
         # Hacemos una búsqueda por los valores introducidos por parámetros
 
         query = getQueryAnd(request.GET)
         if query:
-            queryset = Historico_Tipo_Situacion.objects.filter(query)
+            queryset = Historico_Tipo_Situacion.objects.filter(query)[1:]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
