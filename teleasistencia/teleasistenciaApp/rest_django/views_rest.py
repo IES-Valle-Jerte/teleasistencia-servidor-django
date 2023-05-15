@@ -844,6 +844,8 @@ class Terminal_ViewSet(viewsets.ModelViewSet):
             terminal.modo_acceso_vivienda = request.data.get("modo_acceso_vivienda")
         if request.data.get("barreras_arquitectonicas") is not None:
             terminal.barreras_arquitectonicas = request.data.get("barreras_arquitectonicas")
+        if request.data.get("modelo_terminal") is not None:
+            terminal.modelo_terminal=request.data.get("modelo_terminal")
 
         terminal.save()
 
