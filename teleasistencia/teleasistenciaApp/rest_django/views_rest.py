@@ -210,7 +210,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         blue("TeleasistenciaApp", f"ViewsRest: {kwargs}")
         try:
-            user = User.objects.get(pk=kwargs["pk"])
+            # Sacar la bbdd y hacer el borrado en la BBDD en la que nos encontramos
+            database = Database_User.objects.get(user=request.user).database
+            user = User.objects.using(database.nameDescritive).get(pk=kwargs["pk"])
             # Drop de Database_User y Imagen_User se hacen en cascada
             user.delete()
 
@@ -218,7 +220,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response('Error: No existe ningún usuario con esa id', 405)
         except:
-            return Response('Error interno');
+            return Response("Error Interno", 500)
 
 
 class PermissionViewSet(viewsets.ModelViewSet):
