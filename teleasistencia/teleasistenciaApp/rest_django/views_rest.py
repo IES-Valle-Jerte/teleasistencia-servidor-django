@@ -868,7 +868,10 @@ class Historico_Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
 
         query = getQueryAnd(request.GET)
         if query:
-            queryset = Historico_Tipo_Situacion.objects.filter(query)[1:]
+            # Devolvemos el último historico de situaciones
+            queryset = Historico_Tipo_Situacion.objects.filter(query).last()
+            serializer = self.get_serializer(queryset, many=False)
+            return Response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
