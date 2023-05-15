@@ -1091,6 +1091,18 @@ class Paciente_ViewSet(viewsets.ModelViewSet):
         paciente_serializer = Paciente_Serializer(paciente)
         return Response(paciente_serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        #Conseguimos el parametro de la URL
+        paciente = Paciente.objects.get(pk=kwargs["pk"])
+        terminal = Terminal.objects.get(pk=paciente.id_terminal.id)
+        persona = Persona.objects.get(pk=paciente.id_persona.id)
+        if persona is not None:
+            persona.delete()
+        if terminal is not None:
+            terminal.delete()
+        paciente.delete()
+        return Response("")
+
 
 class Tipo_Modalidad_Paciente_ViewSet(viewsets.ModelViewSet):
     """
