@@ -113,18 +113,11 @@ class Relacion_Terminal_Recurso_Comunitario_Serializer(serializers.ModelSerializ
 
 
 class Terminal_Serializer(serializers.ModelSerializer):
+
     class Meta:
         model = Terminal
         fields = '__all__'
         depth = 2
-
-
-class Historico_Tipo_Situación_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Historico_Tipo_Situacion
-        fields = '__all__'
-        depth = 1
-
 
 class Tipo_Situacion_Serializer(serializers.ModelSerializer):
     class Meta:

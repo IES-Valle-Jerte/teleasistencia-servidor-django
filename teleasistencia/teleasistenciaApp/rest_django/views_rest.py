@@ -805,6 +805,12 @@ class Terminal_ViewSet(viewsets.ModelViewSet):
         else:
             id_tipo_vivienda = None
 
+        # Comprobamos que existe id_Tipo_situacion
+        if request.data.get("id_tipo_situacion"):
+            id_tipo_situacion = Tipo_Situacion.objects.get(pk=request.data.get("id_tipo_situacion"))
+        else:
+            id_tipo_situacion = None
+
         # Comprobamos que existe el id_titular
         if request.data.get("id_titular"):
             id_titular = Paciente.objects.get(pk=request.data.get("id_titular"))
@@ -815,6 +821,8 @@ class Terminal_ViewSet(viewsets.ModelViewSet):
             numero_terminal=request.data.get("numero_terminal"),
             modo_acceso_vivienda=request.data.get("modo_acceso_vivienda"),
             barreras_arquitectonicas=request.data.get("barreras_arquitectonicas"),
+            fecha_tipo_situacion=request.data.get("fecha_tipo_situacion"),
+            id_tipo_situacion=id_tipo_situacion,
             id_tipo_vivienda=id_tipo_vivienda,
             id_titular=id_titular
         )
@@ -825,19 +833,29 @@ class Terminal_ViewSet(viewsets.ModelViewSet):
         return Response(terminal_serializer.data)
 
     def update(self, request, *args, **kwargs):
-        # Comprobamos que existe id_tipo_vivienda
-        id_tipo_vivienda = Tipo_Vivienda.objects.get(pk=request.data.get("id_tipo_vivienda"))
-        if id_tipo_vivienda is None:
-            return Response("Error: id_tipo_vivienda",405)
-
-        # Comprobamos que existe el id_titular
-        id_titular = Paciente.objects.get(pk=request.data.get("id_titular"))
-        if id_titular is None:
-            return Response("Error: id_titular",405)
-
         terminal = Terminal.objects.get(pk=kwargs["pk"])
-        terminal.id_tipo_vivienda = id_tipo_vivienda
-        terminal.id_titular = id_titular
+        # Comprobamos que existe id_tipo_vivienda
+        if request.data.get("id_tipo_vivienda"):
+            id_tipo_vivienda = Tipo_Vivienda.objects.get(pk=request.data.get("id_tipo_vivienda"))
+            if id_tipo_vivienda is None:
+                return Response("Error: id_tipo_vivienda",405)
+            else:
+                terminal.id_tipo_vivienda = id_tipo_vivienda
+
+        if request.data.get("id_tipo_situacion"):
+            id_tipo_situacion = Tipo_Situacion.objects.get(pk=request.data.get("id_tipo_situacion"))
+            if id_tipo_situacion is None:
+                return Response("Error: id_tipo_situacion",405)
+            else:
+                terminal.id_tipo_situacion = id_tipo_situacion
+        # Comprobamos que existe el id_titular
+        if request.data.get("id_titular"):
+            id_titular = Paciente.objects.get(pk=request.data.get("id_titular"))
+            if id_titular is None:
+                return Response("Error: id_titular",405)
+            else:
+                terminal.id_titular = id_titular
+
         if request.data.get("numero_terminal") is not None:
             terminal.numero_terminal = request.data.get("numero_terminal")
         if request.data.get("modo_acceso_vivienda") is not None:
@@ -846,81 +864,15 @@ class Terminal_ViewSet(viewsets.ModelViewSet):
             terminal.barreras_arquitectonicas = request.data.get("barreras_arquitectonicas")
         if request.data.get("modelo_terminal") is not None:
             terminal.modelo_terminal=request.data.get("modelo_terminal")
-
+        if request.data.get("fecha_tipo_situacion") is not None:
+            terminal.fecha_tipo_situacion=request.data.get("fecha_tipo_situacion")
+        else:
+            id_tipo_situacion = None
         terminal.save()
 
         # Devolvemos el terminal modificado
         terminal_serializer = Terminal_Serializer(terminal)
         return Response(terminal_serializer.data)
-
-
-class Historico_Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint para las empresas
-    """
-    queryset = Historico_Tipo_Situacion.objects.all()
-    serializer_class = Historico_Tipo_Situación_Serializer
-    # permission_classes = [permissions.IsAdminUser] # Si quisieramos para todos los registrados: IsAuthenticated]
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        # Hacemos una búsqueda por los valores introducidos por parámetros
-
-        query = getQueryAnd(request.GET)
-        if query:
-            # Devolvemos el último historico de situaciones
-            queryset = Historico_Tipo_Situacion.objects.filter(query).last()
-            serializer = self.get_serializer(queryset, many=False)
-            return Response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        # Comprobamos que el tipo situacion existe
-        id_tipo_situacion = Tipo_Situacion.objects.get(pk=request.data.get("id_tipo_situacion"))
-        if id_tipo_situacion is None:
-            return Response("Error: id_tipo_situacion",405)
-
-        # Comprobamos que el terminal existe
-        id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
-        if id_terminal is None:
-            return Response("Error: id_terminal",405)
-
-        # Creamos el historico_tipo_situacion
-        historico_tipo_situacion = Historico_Tipo_Situacion(
-            fecha=request.data.get("fecha"),
-            id_tipo_situacion=id_tipo_situacion,
-            id_terminal=id_terminal
-        )
-
-        historico_tipo_situacion.save()
-        # Devolvemos el historico_tipo_situación creado
-        historico_tipo_situacion_serializer = Historico_Tipo_Situación_Serializer(historico_tipo_situacion)
-        return Response(historico_tipo_situacion_serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        # Comprobamos que el tipo situacion existe
-        id_tipo_situacion = Tipo_Situacion.objects.get(pk=request.data.get("id_tipo_situacion"))
-        if id_tipo_situacion is None:
-            return Response("Error: id_tipo_situacion",405)
-
-        # Comprobamos que el terminal existe
-        id_terminal = Terminal.objects.get(pk=request.data.get("id_terminal"))
-        if id_terminal is None:
-            return Response("Error: id_terminal",405)
-
-        # Modificamos el historico_tipo_situacion
-        historico_tipo_situacion = Historico_Tipo_Situacion.objects.get(pk=kwargs["pk"])
-        historico_tipo_situacion.id_tipo_situacion = id_tipo_situacion
-        historico_tipo_situacion.id_terminal = id_terminal
-        historico_tipo_situacion.fecha = request.data.get("fecha")
-
-        historico_tipo_situacion.save()
-
-        historico_tipo_situacion_serializer = Historico_Tipo_Situación_Serializer(historico_tipo_situacion)
-        return Response(historico_tipo_situacion_serializer.data)
-
-
 
 class Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
     """

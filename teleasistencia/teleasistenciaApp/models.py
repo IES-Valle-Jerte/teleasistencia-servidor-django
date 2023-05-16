@@ -242,6 +242,11 @@ class Tipo_Vivienda(models.Model):
     def __str__(self):
         return self.nombre
 
+class Tipo_Situacion(models.Model):
+    nombre = models.CharField(max_length=200)
+    def __str__(self):
+        return self.nombre
+
 class Terminal(models.Model):
     numero_terminal = models.CharField(max_length=30, null=False)
     id_titular = models.ForeignKey(Paciente, null=True, on_delete=models.PROTECT, blank=True)
@@ -249,6 +254,8 @@ class Terminal(models.Model):
     modo_acceso_vivienda = models.CharField(max_length=400)
     barreras_arquitectonicas = models.CharField(max_length=5000, blank=True)
     modelo_terminal = models.CharField(max_length=400, blank=True)
+    id_tipo_situacion = models.ForeignKey(Tipo_Situacion, null=True, on_delete=models.SET_NULL)
+    fecha_tipo_situacion = models.DateField(null=True, default=now)
     def __str__(self):
         if self.id_titular:
             return self.numero_terminal+" - "+self.id_titular.id_persona.nombre
@@ -309,22 +316,22 @@ class Alarma(models.Model):
             return self.id_tipo_alarma.nombre + " - " + self.estado_alarma + " - " + str(self.fecha_registro)
         else:
             return self.estado_alarma+ " - " + str(self.fecha_registro)
-        
+
     def save(self, *args, **kwargs):
         # Si no tiene asignada una cave primaria, es una nueva instancia
         is_new = self.pk is None
 
         # Ejecutar el resto del código original
         super(Alarma, self).save(*args, **kwargs)
-        
+
         # Si es nuevo, notificar
         if is_new:
             # Notificar a los clientes
             self.notify('new_alarm')
-        
+
     def notify(self, accion):
         from .rest_django.serializers import Alarma_Serializer
-        
+
         alarma_serializer = Alarma_Serializer(self)
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
@@ -381,28 +388,6 @@ class Recursos_Comunitarios_En_Alarma(models.Model):
         elif self.id_alarma:
             return self.id_alarma.estado_alarma + " - " + str(
                 self.id_alarma.fecha_registro) + " - " +" - " + str(self.fecha_registro)
-
-
-class Tipo_Situacion(models.Model):
-    nombre = models.CharField(max_length=200)
-    def __str__(self):
-        return self.nombre
-
-class Historico_Tipo_Situacion(models.Model):
-    id_tipo_situacion = models.ForeignKey(Tipo_Situacion, null=True, on_delete=models.SET_NULL)
-    id_terminal = models.ForeignKey(Terminal, null=True, on_delete=models.SET_NULL)
-    fecha = models.DateField(null=False, default=now)
-    def __str__(self):
-        if self.id_tipo_situacion and self.id_terminal and self.id_terminal.id_titular:
-            return self.id_tipo_situacion.nombre+" - "+self.id_terminal.numero_terminal+" - "+self.id_terminal.id_titular.id_persona.nombre + " - "+str(self.fecha)
-        elif self.id_tipo_situacion and self.id_terminal:
-            return self.id_tipo_situacion.nombre+" - "+self.id_terminal.numero_terminal+ " - "+str(self.fecha)
-        elif self.id_tipo_situacion:
-            return self.id_tipo_situacion.nombre+ " - "+str(self.fecha)
-        elif self.id_terminal and self.id_terminal.id_titular:
-            return self.id_terminal.numero_terminal+" - "+self.id_terminal.id_titular.id_persona.nombre+ " - "+str(self.fecha)
-        elif self.id_terminal:
-            return self.id_terminal.numero_terminal+ " - "+str(self.fecha)
 
 class Gestion_Base_Datos(models.Model):
     ubicacion_copia = models.CharField(max_length=200, default='/Server/teleasistencia/backup')
