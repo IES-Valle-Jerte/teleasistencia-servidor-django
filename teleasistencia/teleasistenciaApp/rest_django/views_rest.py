@@ -49,7 +49,7 @@ class IsAdminMember(permissions.BasePermission):
 class IsTeacherMember(permissions.BasePermission):
     def has_permission(self, request, view):
         # Si el usuario tiene el grupo tiene el permiso
-        return request.user.groups.filter(name="profesor").exists()
+        return request.user.groups.filter(name__in=['profesor', 'administrador']).exists()
 
 
 # Creamos la vista Profile que  modificara los datos y retornara la informacion del usuario activo en la aplicación
@@ -134,8 +134,8 @@ class UserViewSet(viewsets.ModelViewSet):
         # Hacemos una búsqueda por los valores introducidos por parámetros
         query = getQueryAnd(request.GET)
 
-        database_user =Database_User.objects.get(user=request.user)
-        database_user_selected =Database_User.objects.filter(database=database_user.database)
+        database_user = Database_User.objects.get(user=request.user)
+        database_user_selected = Database_User.objects.filter(database=database_user.database)
         if query:
             queryset = User.objects.filter(id__in = [database_u.user.id for database_u in database_user_selected]).filter(query)
         # En el caso de que no hay parámetros y queramos devolver todos los valores
