@@ -33,7 +33,7 @@ from django.http import JsonResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from utilidad.logging import info, blue
+from utilidad.logging import info, blue, red
 
 
 # Comprobamos si el usuario es administrador. Se utiliza para la discernir
@@ -116,8 +116,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
         except Database.DoesNotExist:
             return Response("Error: No existe ninguna base de datos con ese id", 405)
         except ConnectionDoesNotExist as e:
-            info(e)
-            return Response("Error interno", 500)
+            red("TeleasistenciaApp", e)
+            return Response("Error: No existe ninguna base de datos con ese id", 405)
 
 
 class UserViewSet(viewsets.ModelViewSet):
