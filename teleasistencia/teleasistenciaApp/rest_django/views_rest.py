@@ -93,12 +93,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 # Guardar cambios
                 user_image.save()
 
-            user.save()
-
-            # Si el usuario es un administrador permitirle cambiar su BBDD seleccionada.
-            if request.user.has_perms([IsAdminMember]):
-                db_user = Database_User.objects.get(user=user)
-                if request.data.get("id_database") is not None:
+                # Si el usuario es un administrador permitirle cambiar su BBDD seleccionada.
+                if request.user.has_perms([IsAdminMember]) and request.data.get("id_database") is not None:
+                    db_user = Database_User.objects.get(user=user)
                     new_db = Database.objects.get(pk=request.data.get("id_database"))
                     # Si se ha hecho un cambio de base de datos
                     if new_db is not db_user.database:
@@ -108,6 +105,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
                         # Guardamos el usuario en la nueva DDBB
                         user.save(using=new_db.nameDescritive)
 
+            user.save()
+
             # Devolvemos el user modificado con su imagen
             user_serializer = self.get_serializer(user, many=False)
             return Response(user_serializer.data)
@@ -116,7 +115,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return Response("Error: El usuario no coincide con el usuario identificado", 405)
         except Database.DoesNotExist:
             return Response("Error: No existe ninguna base de datos con ese id", 405)
-        except ConnectionDoesNotExist:
+        except ConnectionDoesNotExist as e:
+            info(e)
             return Response("Error interno", 500)
 
 
