@@ -14,8 +14,6 @@ class ImagenUserSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
    imagen = ImagenUserSerializer(source='imagen_user', read_only=True)
    database_id = serializers.SerializerMethodField()
-   # database_id = Database_UserSerializer(source='database_user', read_only=True)
-   # database_id = serializers.PrimaryKeyRelatedField(source='database_user', queryset=Database.objects.all())
    class Meta:
        model = User
        fields = ['id', 'url', 'database_id', 'is_active', 'last_login', 'username', 'first_name', 'last_name', 'email', 'date_joined', 'groups', 'imagen']

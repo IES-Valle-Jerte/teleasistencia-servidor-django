@@ -50,13 +50,14 @@ class IsAdminMember(permissions.BasePermission):
 class IsTeacherMember(permissions.BasePermission):
     def has_permission(self, request, view):
         # Si el usuario tiene el grupo tiene el permiso
-        return request.user.groups.filter(name__in=['profesor', 'administrador']).exists()
+        return request.user.groups.filter(name='profesor').exists()
 
 
 # Creamos la vista Profile que  modificara los datos y retornara la informacion del usuario activo en la aplicación
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
+    permission_classes = [IsAdminMember | IsTeacherMember]
 
     def list(self, request, *args, **kwargs):
         # Obtenemos el usuario filtrando por el usuario de la request
@@ -95,7 +96,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 user_image.save()
 
             # Si el usuario es un administrador permitirle cambiar su BBDD seleccionada.
-            if request.user.has_perms([IsAdminMember]) and request.data.get("id_database") is not None:
+            if IsAdminMember.has_permission(self, request, self) and request.data.get("id_database") is not None:
                 db_user = Database_User.objects.get(user=user)
                 new_db = Database.objects.get(pk=request.data.get("id_database"))
                 # Si se ha hecho un cambio de base de datos
@@ -127,7 +128,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [IsTeacherMember]
+    permission_classes = [IsAdminMember | IsTeacherMember]
     # permission_classes = [permissions.IsAdminUser]
 
     # Obtenemos el listado de personas filtrado por los parametros GET
