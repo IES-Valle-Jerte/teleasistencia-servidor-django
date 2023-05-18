@@ -22,7 +22,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from django.utils.connection import ConnectionDoesNotExist
-from .utils import getQueryAnd, partial_update_generico
+from .utils import getQueryAnd, partial_update_generico, normalizar_booleano
 
 # Modelos propios
 from ..models import *
@@ -216,7 +216,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.data.get("last_name") is not None:
             user.last_name = request.data.get("last_name")
         if request.data.get("is_active") is not None:
-            user.is_active = request.data.get("is_active")
+            user.is_active = normalizar_booleano(request.data.get("is_active"))
         user.save()
         if request.FILES:
             # Extraer la imagen que han subido
