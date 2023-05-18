@@ -278,10 +278,20 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    http_method_names=['get']
 
-    # permission_classes = [permissions.IsAdminUser]
-    permission_classes = [IsTeacherMember]
+    # Solo permitirmos que el grupo administrador se muestra para ellos mismos,
+    # así no permitimos seleccionarlo en los usuarios del servicio
+    def list(self, request, *args, **kwargs):
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        is_group_admin = request.user.groups.filter(name='administrador')
 
+        if not is_group_admin:
+            queryset = Group.objects.exclude(name= 'administrador')
+        else:
+            queryset = Group.objects.all()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class Clasificacion_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     """
