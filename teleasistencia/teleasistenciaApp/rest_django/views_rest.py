@@ -22,7 +22,8 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from django.utils.connection import ConnectionDoesNotExist
-from .utils import getQueryAnd
+from .utils import getQueryAnd, partial_update_generico
+
 # Modelos propios
 from ..models import *
 # Serializadores propios
@@ -1072,12 +1073,9 @@ class Paciente_ViewSet(viewsets.ModelViewSet):
         paciente_serializer = Paciente_Serializer(paciente)
         return Response(paciente_serializer.data)
 
+    # Ejemplo de cómo se haría un PATCH genérico
     def partial_update(self, request, *args, **kwargs):
-        paciente = Paciente.objects.get(pk=kwargs["pk"])
-        paciente.numero_seguridad_social = request.data.get("numero_seguridad_social")
-        paciente.save()
-        paciente_serializer = Paciente_Serializer(paciente)
-        return Response(paciente_serializer.data)
+        return Response(partial_update_generico(self, request, *args, **kwargs))
 
     def destroy(self, request, *args, **kwargs):
         #Conseguimos el parametro de la URL
