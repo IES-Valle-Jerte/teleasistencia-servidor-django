@@ -149,13 +149,16 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         # Comprobamos que existe el groups
         id_groups = Group.objects.get(pk=request.data.get("groups"))
+        password = request.data.get("password")
 
         if id_groups is None:
             return Response("Error: Groups",405)
 
+        if password is None:
+            return Response("Error: Falta contraseña", 405)
+
         if User.objects.filter(username=request.data.get("username")).exists():
             return Response("Error: El usuario ya existe",405)
-
 
         user = User(
             username=request.data.get("username"),
@@ -164,9 +167,8 @@ class UserViewSet(viewsets.ModelViewSet):
             email=request.data.get("email"),
         )
 
-
         # Encriptamos la contraseña
-        user.set_password(request.data.get("password"))
+        user.set_password(password)
         user.save()
 
         # El usuario nuevo se crea asociado a la misma base de datos que el que lo crea
@@ -213,6 +215,8 @@ class UserViewSet(viewsets.ModelViewSet):
             user.first_name = request.data.get("first_name")
         if request.data.get("last_name") is not None:
             user.last_name = request.data.get("last_name")
+        if request.data.get("is_active") is not None:
+            user.is_active = request.data.get("is_active")
         user.save()
         if request.FILES:
             # Extraer la imagen que han subido

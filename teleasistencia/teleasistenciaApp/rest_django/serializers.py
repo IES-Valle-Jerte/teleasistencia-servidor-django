@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
    imagen = ImagenUserSerializer(source='imagen_user', read_only=True)
    class Meta:
        model = User
-       fields = ['id', 'url', 'last_login', 'username', 'first_name', 'last_name', 'email', 'date_joined', 'groups', 'imagen']
+       fields = ['id', 'url', 'is_active', 'last_login', 'username', 'first_name', 'last_name', 'email', 'date_joined', 'groups', 'imagen']
        depth = 1
 
 class PermissionSerializer(serializers.ModelSerializer):
