@@ -27,7 +27,7 @@ class PermissionSerializer(serializers.ModelSerializer):
 class DatabaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Database
-        fields = '__all__'
+        fields = ['id','nameDescritive']
 
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
