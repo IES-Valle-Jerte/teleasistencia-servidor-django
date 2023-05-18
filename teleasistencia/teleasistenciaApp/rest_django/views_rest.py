@@ -93,17 +93,17 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 # Guardar cambios
                 user_image.save()
 
-                # Si el usuario es un administrador permitirle cambiar su BBDD seleccionada.
-                if request.user.has_perms([IsAdminMember]) and request.data.get("id_database") is not None:
-                    db_user = Database_User.objects.get(user=user)
-                    new_db = Database.objects.get(pk=request.data.get("id_database"))
-                    # Si se ha hecho un cambio de base de datos
-                    if new_db is not db_user.database:
-                        # Cambiamos la BBDD asignada
-                        db_user.database = new_db
-                        db_user.save()
-                        # Guardamos el usuario en la nueva DDBB
-                        user.save(using=new_db.nameDescritive)
+            # Si el usuario es un administrador permitirle cambiar su BBDD seleccionada.
+            if request.user.has_perms([IsAdminMember]) and request.data.get("id_database") is not None:
+                db_user = Database_User.objects.get(user=user)
+                new_db = Database.objects.get(pk=request.data.get("id_database"))
+                # Si se ha hecho un cambio de base de datos
+                if new_db is not db_user.database:
+                    # Cambiamos la BBDD asignada
+                    db_user.database = new_db
+                    db_user.save()
+                    # Guardamos el usuario en la nueva DDBB
+                    user.save(using=new_db.nameDescritive)
 
             user.save()
 
