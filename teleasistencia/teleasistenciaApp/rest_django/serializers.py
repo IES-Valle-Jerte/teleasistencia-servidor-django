@@ -12,12 +12,21 @@ class ImagenUserSerializer(serializers.ModelSerializer):
        fields = ['imagen']
 
 class UserSerializer(serializers.ModelSerializer):
-
    imagen = ImagenUserSerializer(source='imagen_user', read_only=True)
+   database_id = serializers.SerializerMethodField()
+   # database_id = Database_UserSerializer(source='database_user', read_only=True)
+   # database_id = serializers.PrimaryKeyRelatedField(source='database_user', queryset=Database.objects.all())
    class Meta:
        model = User
-       fields = ['id', 'url', 'is_active', 'last_login', 'username', 'first_name', 'last_name', 'email', 'date_joined', 'groups', 'imagen']
+       fields = ['id', 'url', 'database_id', 'is_active', 'last_login', 'username', 'first_name', 'last_name', 'email', 'date_joined', 'groups', 'imagen']
        depth = 1
+
+   def get_database_id(self, obj):
+       try:
+           db_user = obj.database_user  # Assuming the related name is "database_user"
+           return db_user.database.pk
+       except Database_User.DoesNotExist:
+           return None
 
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
