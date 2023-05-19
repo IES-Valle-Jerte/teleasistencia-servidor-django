@@ -71,6 +71,7 @@ router.register(r'persona_contacto_en_alarma', views_rest.Persona_Contacto_En_Al
 router.register(r'gestion_base_datos', views_rest.Gestion_Base_Datos_ViewSet)
 router.register(r'profile', views_rest.ProfileViewSet)
 router.register(r'desarrollador_tecnologia', views_rest.DesarrolladorTecnologiaViewSet)
+router.register(r'seguimiento_teleoperador', views_rest.SeguimientoTeleoperador)
 
 
 urlpatterns = [
