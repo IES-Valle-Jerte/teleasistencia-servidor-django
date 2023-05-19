@@ -22,6 +22,8 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from django.utils.connection import ConnectionDoesNotExist
+import json
+
 from .utils import getQueryAnd, partial_update_generico
 
 # Modelos propios
@@ -699,8 +701,14 @@ class Tipo_Agenda_ViewSet(viewsets.ModelViewSet):
     """
     queryset = Tipo_Agenda.objects.all()
     serializer_class = Tipo_Agenda_Serializer
-    permission_classes = [IsTeacherMember]
-    # permission_classes = [permissions.IsAdminUser] # Si quieriéramos para todos los registrados: IsAuthenticated]
+
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
 
 
 class Historico_Agenda_Llamadas_ViewSet(viewsets.ModelViewSet):
@@ -1647,3 +1655,52 @@ class DesarrolladorTecnologiaViewSet(viewsets.ModelViewSet):
     queryset = Convocatoria_Proyecto.objects.all()
     serializer_class = Convocatoria_Proyecto_Serializer
     http_method_names=['get']
+
+# Permite mostrar el seguimiento de los teleoperadores
+# Mostrando las alarmas y agendas resueltas
+class SeguimientoTeleoperador(viewsets.ModelViewSet):
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsTeacherMember]
+    http_method_names=['get']
+
+    def list(self, request, *args, **kwargs):
+        # Variable de respuesta
+        json_response = []
+        # Para este caso devolvemos todos los teleoperadores y el total de alarmas y agendas resueltas
+        user_search = User.objects.filter(groups__name="teleoperador")
+        for usuario in user_search:
+            usuario_json = {}
+            historico_agenda_llamadas = Historico_Agenda_Llamadas.objects.filter(id_teleoperador=usuario)
+            alarmas = Alarma.objects.filter(id_teleoperador=usuario)
+            usuario_json["id"] = usuario.id
+            usuario_json["first_name"] = usuario.first_name
+            usuario_json["second_name"] = usuario.last_name
+            usuario_json["alarmas_total"] = alarmas.count()
+            usuario_json["agendas_total"] = historico_agenda_llamadas.count()
+            json_response.append(usuario_json)
+        return Response(json_response)
+
+    # En el caso de que se haga un GET con el ID del teleoperador
+    def retrieve(self, request, *args, **kwargs):
+        # En el caso de que quiera obtener las alarmas/agendas resuetlasd de un teleoperador
+        #if (kwargs is not None):
+        #    user_search = User.objects.get(pk=kwargs["pk"])
+        # Para este caso devolvemos todos los teleoperadores y el total de alarmas y agendas resueltas
+        #else:
+        user_search = User.objects.get(pk=kwargs['pk'])
+        print(user_search)
+        usuario_json = {}
+        historico_agenda_llamadas = Historico_Agenda_Llamadas.objects.filter(id_teleoperador=kwargs['pk'])
+        alarmas = Alarma.objects.filter(id_teleoperador=kwargs['pk'])
+        usuario_json["id"] = user_search.id
+        usuario_json["first_name"] = user_search.first_name
+        usuario_json["second_name"] = user_search.last_name
+        usuario_json["_total"] = alarmas.count()
+        usuario_json["agendas_total"] = historico_agenda_llamadas.count()
+        # Serializamos as agendas/alarmas y convertimos su salida a JSON
+        usuario_json["agendas"] = json.loads(json.dumps(Historico_Agenda_Llamadas_Serializer(historico_agenda_llamadas, many=True).data))
+        usuario_json["alarmas"] = json.loads(json.dumps(Alarma_Serializer(alarmas, many=True).data))
+        print (Historico_Agenda_Llamadas_Serializer(historico_agenda_llamadas, many=True).data)
+        return Response(usuario_json)
