@@ -304,7 +304,7 @@ class Clasificacion_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
@@ -324,7 +324,7 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
@@ -436,7 +436,7 @@ class Tipo_Alarma_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
@@ -508,7 +508,7 @@ class Clasificacion_Alarma_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
@@ -704,7 +704,7 @@ class Tipo_Agenda_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
@@ -936,7 +936,7 @@ class Tipo_Situacion_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
@@ -953,7 +953,7 @@ class Tipo_Vivienda_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
@@ -1117,7 +1117,7 @@ class Tipo_Modalidad_Paciente_ViewSet(viewsets.ModelViewSet):
 
     # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsTeacherMember]
