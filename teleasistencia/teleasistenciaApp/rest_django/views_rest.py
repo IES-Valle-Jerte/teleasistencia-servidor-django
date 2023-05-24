@@ -58,7 +58,6 @@ class IsTeacherMember(permissions.BasePermission):
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [IsAdminMember | IsTeacherMember]
 
     def list(self, request, *args, **kwargs):
         # Obtenemos el usuario filtrando por el usuario de la request
@@ -1701,7 +1700,7 @@ class SeguimientoTeleoperador(viewsets.ModelViewSet):
         usuario_json["id"] = user_search.id
         usuario_json["first_name"] = user_search.first_name
         usuario_json["second_name"] = user_search.last_name
-        usuario_json["_total"] = alarmas.count()
+        usuario_json["alarmas_total"] = alarmas.count()
         usuario_json["agendas_total"] = historico_agenda_llamadas.count()
         # Serializamos as agendas/alarmas y convertimos su salida a JSON
         usuario_json["agendas"] = json.loads(json.dumps(Historico_Agenda_Llamadas_Serializer(historico_agenda_llamadas, many=True).data))

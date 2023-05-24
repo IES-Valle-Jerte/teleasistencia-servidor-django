@@ -98,7 +98,7 @@ class Historico_Agenda_Llamadas_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Historico_Agenda_Llamadas
         fields = '__all__'
-        depth = 2
+        depth = 3
 
 
 class Agenda_Serializer(serializers.ModelSerializer):
