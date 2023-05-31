@@ -6,6 +6,15 @@ from rest_framework.utils.representation import serializer_repr
 
 from ..models import *
 
+
+#Permite obtener el usaurio dentro de las serializaciones
+def getDatabaseByUser(self):
+    database_user =Database_User.objects.get(user=self.context["request"].user)
+    if (database_user):
+        return database_user.database.nameDescritive
+    else:
+        return "default"
+
 class ImagenUserSerializer(serializers.ModelSerializer):
    class Meta:
        model = Imagen_User
@@ -51,14 +60,14 @@ class Tipo_Recurso_Comunitario_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Tipo_Recurso_Comunitario
         fields = '__all__' #Indica todos los campos
+
     def create(self, validated_data):
-        database_user =Database_User.objects.get(user=self.context["request"].user)
-        return self.Meta.model.objects.db_manager(database_user.database.nameDescritive).create(**validated_data)
+        # Selecciona la base de datos y crear los valores introducidos
+        return self.Meta.model.objects.db_manager(getDatabaseByUser(self)).create(**validated_data)
     '''
     def update(self, instance, validated_data):
-        database_user =Database_User.objects.get(user=self.context["request"].user)
-        cambios =Tipo_Recurso_Comunitario.objects.db_manager(database_user.database.nameDescritive).filter(id=instance.id).update(**validated_data)
-        return cambios
+        self.Meta.model.objects.db_manager(getDatabaseByUser(self)).filter(id=instance.id).update(**validated_data)
+        return self.Meta.model.objects.db_manager(getDatabaseByUser(self)).get(id=instance.id)
     '''
 
 
