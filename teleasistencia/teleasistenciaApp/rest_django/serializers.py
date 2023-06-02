@@ -4,16 +4,8 @@ from rest_framework import serializers
 #Modelos propios:
 from rest_framework.utils.representation import serializer_repr
 
+from .utils import getDatabaseByUser
 from ..models import *
-
-
-#Permite obtener el usaurio dentro de las serializaciones
-def getDatabaseByUser(self):
-    database_user =Database_User.objects.get(user=self.context["request"].user)
-    if (database_user):
-        return database_user.database.nameDescritive
-    else:
-        return "default"
 
 class ImagenUserSerializer(serializers.ModelSerializer):
    class Meta:
@@ -63,7 +55,7 @@ class Tipo_Recurso_Comunitario_Serializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Selecciona la base de datos y crear los valores introducidos
-        return self.Meta.model.objects.db_manager(getDatabaseByUser(self)).create(**validated_data)
+        return self.Meta.model.objects.db_manager(getDatabaseByUser(self.context["request"].user)).create(**validated_data)
     '''
     def update(self, instance, validated_data):
         self.Meta.model.objects.db_manager(getDatabaseByUser(self)).filter(id=instance.id).update(**validated_data)

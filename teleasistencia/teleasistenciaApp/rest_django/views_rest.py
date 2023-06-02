@@ -335,16 +335,14 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
     # Obtenemos el listado de personas filtrado por los parametros GET
     def list(self, request, *args, **kwargs):
-        # Obtenemos la base de datos del usuario
-        database_user =Database_User.objects.get(user=request.user)
         # Hacemos una búsqueda por los valores introducidos por parámetros
         query = getQueryAnd(request.GET)
         if query:
             # Con using seleccionamos la base de datos del usuario
-            queryset = self.queryset.using(database_user.database.nameDescritive).filter(query)
+            queryset = self.queryset.using(getDatabaseByUser(request.user)).filter(query)
         # En el caso de que no hay parámetros y queramos devolver todos los valores
         else:
-            queryset = self.queryset.using(database_user.database.nameDescritive)
+            queryset = self.queryset.using(getDatabaseByUser(request.user))
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -353,21 +351,17 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
 
     # Actualiza el objeto
     def update(self, request, *args, **kwargs):
-        # Obtenemos la base de datos del usuario
-        database_user =Database_User.objects.get(user=request.user)
         # Con using seleccionamos la base de datos del usuario y con kwargs obtenemos el identificador que se desea modificar
-        self.serializer_class.Meta.model.objects.using(database_user.database.nameDescritive).filter(pk=kwargs["pk"]).update(**request.data)
+        self.serializer_class.Meta.model.objects.using(getDatabaseByUser(request.user)).filter(pk=kwargs["pk"]).update(**request.data)
         # Recuperamos los datos de todo el objeto actualizado y serializado (con su profundidad)
-        return Response(self.get_serializer(self.serializer_class.Meta.model.objects.using(database_user.database.nameDescritive).get(pk=kwargs["pk"])).data)
+        return Response(self.get_serializer(self.serializer_class.Meta.model.objects.using(getDatabaseByUser(request.user)).get(pk=kwargs["pk"])).data)
 
     # Borrado del objeto
     def destroy(self, request, *args, **kwargs):
-        # Obtenemos la base de datos del usuario
-        database_user =Database_User.objects.get(user=request.user)
         # Con using seleccionamos la base de datos del usuario y con kwargs obtenemos el identificador que se desea modificar
-        objeto = self.serializer_class.Meta.model.objects.using(database_user.database.nameDescritive).get(pk=kwargs["pk"])
+        objeto = self.serializer_class.Meta.model.objects.using(getDatabaseByUser(request.user)).get(pk=kwargs["pk"])
         if objeto is not None:
-            objeto.delete(using=database_user.database.nameDescritive)
+            objeto.delete(using=getDatabaseByUser(request.user))
         return Response()
 
 
@@ -394,7 +388,6 @@ class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-
         # Comprobamos que el tipo de centro sanitario existe
         tipos_recurso_comunitario = Tipo_Recurso_Comunitario.objects.get(
             pk=request.data.get("id_tipos_recurso_comunitario"))
