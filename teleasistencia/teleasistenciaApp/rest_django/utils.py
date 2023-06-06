@@ -39,15 +39,6 @@ def partial_update_generico(view, request, *args, **kwargs):
     view.perform_update(serializer)
     return serializer.data
 
-# Permite obtener el nombre de la base de datos a la que corresponde el usuario
-# En caso de no haber base de datos se devuevle "default"
-def  getDatabaseByUser(usuario):
-    database_user =Database_User.objects.get(user=usuario)
-    if (database_user):
-        return database_user.database.nameDescritive
-    else:
-        return "default"
-
 def normalizar_booleano(value):
     """
     Normaliza un valor boolean o cadena de texto representando un boolean como un booleano
@@ -59,3 +50,13 @@ def normalizar_booleano(value):
         return value.lower() == 'true'
     else:
         return None  # or handle the invalid value in a way that makes sense for your application
+
+
+# Permite obtener el nombre de la base de datos a la que corresponde el usuario
+# En caso de no haber base de datos se devuevle "default"
+def  getDatabaseByUser(usuario):
+    database_user =Database_User.objects.get(user=usuario)
+    if (database_user):
+        return database_user.database.nameDescritive
+    else:
+        return "default"

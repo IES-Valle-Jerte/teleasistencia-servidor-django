@@ -54,6 +54,51 @@ class IsTeacherMember(permissions.BasePermission):
         return request.user.groups.filter(name='profesor').exists()
 
 
+# Vista por defecto utilizada para multibase de datos
+class Generic_View():
+
+    # Obtenemos el listado de personas filtrado por los parametros GET
+    def list(self, request, *args, **kwargs):
+        # Hacemos una búsqueda por los valores introducidos por parámetros
+        query = getQueryAnd(request.GET)
+        if query:
+            # Con using seleccionamos la base de datos del usuario
+            queryset = self.queryset.using(getDatabaseByUser(request.user)).filter(query)
+        # En el caso de que no hay parámetros y queramos devolver todos los valores
+        else:
+            queryset = self.queryset.using(getDatabaseByUser(request.user))
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    #TODO: La creación sehace en serializers.py quizá esta parte habría que meterla aquí.
+
+    # Actualiza el objeto
+    def update(self, request, *args, **kwargs):
+        # Obtenemos la base de datos del usuario
+        nameDatabase = getDatabaseByUser(request.user)
+        # Con using seleccionamos la base de datos del usuario y con kwargs obtenemos el identificador que se desea modificar
+        self.serializer_class.Meta.model.objects.using(nameDatabase).filter(pk=kwargs["pk"]).update(**request.data)
+        # Recuperamos los datos de todo el objeto actualizado y serializado (con su profundidad)
+        return Response(self.get_serializer(self.serializer_class.Meta.model.objects.using(nameDatabase).get(pk=kwargs["pk"])).data)
+
+    # Borrado del objeto
+    def destroy(self, request, *args, **kwargs):
+        # Con using seleccionamos la base de datos del usuario y con kwargs obtenemos el identificador que se desea modificar
+        objeto = self.serializer_class.Meta.model.objects.using(getDatabaseByUser(request.user)).get(pk=kwargs["pk"])
+        if objeto is not None:
+            objeto.delete(using=getDatabaseByUser(request.user))
+        return Response()
+
+class Permision_View_All_Edit_Teacher_Views():
+    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
+    def get_permissions(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsTeacherMember]
+        return [permission() for permission in permission_classes]
+
 # Creamos la vista Profile que  modificara los datos y retornara la informacion del usuario activo en la aplicación
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
@@ -298,25 +343,15 @@ class GroupViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-class Clasificacion_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
+class Clasificacion_Recurso_Comunitario_ViewSet(Permision_View_All_Edit_Teacher_Views, viewsets.ModelViewSet):
     """
     API endpoint para las empresas
     """
     queryset = Clasificacion_Recurso_Comunitario.objects.all()
     serializer_class = Clasificacion_Recurso_Comunitario_Serializer
 
-    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
-    def get_permissions(self):
-        if self.action == 'list' or self.action == 'retrieve':
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsTeacherMember]
-        return [permission() for permission in permission_classes]
-    # Habría que descomentar la siguiente línea para permitir las acciones sólo a los usuarios autenticados (Authorization en la petición POST)
-    # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
 
-
-class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
+class Tipo_Recurso_Comunitario_ViewSet(Permision_View_All_Edit_Teacher_Views, Generic_View, viewsets.ModelViewSet):
     """
     API endpoint para las empresas
     """
@@ -325,44 +360,6 @@ class Tipo_Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
     # Habría que descomentar la siguiente línea para permitir las acciones sólo a los usuarios autenticados (Authorization en la petición POST)
     # permission_classes = [permissions.IsAuthenticated] # Si quieriéramos para todos los registrados: IsAuthenticated]
 
-    # Permitimos consultar si está autenticado pero sólo borrar/crear/actualizar si es profesor
-    def get_permissions(self):
-        if self.action == 'list' or self.action == 'retrieve':
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsTeacherMember]
-        return [permission() for permission in permission_classes]
-
-    # Obtenemos el listado de personas filtrado por los parametros GET
-    def list(self, request, *args, **kwargs):
-        # Hacemos una búsqueda por los valores introducidos por parámetros
-        query = getQueryAnd(request.GET)
-        if query:
-            # Con using seleccionamos la base de datos del usuario
-            queryset = self.queryset.using(getDatabaseByUser(request.user)).filter(query)
-        # En el caso de que no hay parámetros y queramos devolver todos los valores
-        else:
-            queryset = self.queryset.using(getDatabaseByUser(request.user))
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    #TODO: La creación sehace en serializers.py quizá esta parte habría que meterla aquí.
-
-    # Actualiza el objeto
-    def update(self, request, *args, **kwargs):
-        # Con using seleccionamos la base de datos del usuario y con kwargs obtenemos el identificador que se desea modificar
-        self.serializer_class.Meta.model.objects.using(getDatabaseByUser(request.user)).filter(pk=kwargs["pk"]).update(**request.data)
-        # Recuperamos los datos de todo el objeto actualizado y serializado (con su profundidad)
-        return Response(self.get_serializer(self.serializer_class.Meta.model.objects.using(getDatabaseByUser(request.user)).get(pk=kwargs["pk"])).data)
-
-    # Borrado del objeto
-    def destroy(self, request, *args, **kwargs):
-        # Con using seleccionamos la base de datos del usuario y con kwargs obtenemos el identificador que se desea modificar
-        objeto = self.serializer_class.Meta.model.objects.using(getDatabaseByUser(request.user)).get(pk=kwargs["pk"])
-        if objeto is not None:
-            objeto.delete(using=getDatabaseByUser(request.user))
-        return Response()
 
 
 class Recurso_Comunitario_ViewSet(viewsets.ModelViewSet):
