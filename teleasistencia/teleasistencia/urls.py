@@ -38,9 +38,6 @@ from rest_framework_simplejwt.views import (
 from django.views.generic.base import RedirectView
 from django.urls import re_path
 
-#Coreapi
-from rest_framework.documentation import include_docs_urls
-
 #Router para la API REST
 # Con trailing_slash=False hacemos que no intermprete la / final de la url, con esto podemos hacer GET, POST y DELETE
 router = routers.DefaultRouter(trailing_slash=False)
@@ -105,8 +102,6 @@ urlpatterns = [
     path('api-rest/reset/<uidb64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     # [password_reset_complete.html] Ventana de confirmación de cambio de contraseña
     path('api-rest/reset/done/', views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
-    #Coreapi
-    path('api-rest/docs/', include_docs_urls(title='Teleasistencia', public=False)),
 ]
 # añadimos el media url y el media root para poder visualizar las imagenes de usuario
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
