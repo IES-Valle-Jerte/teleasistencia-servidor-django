@@ -9,16 +9,24 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import json
 from pathlib import Path
 import os
+import sys
+from dotenv import load_dotenv
 from datetime import timedelta
 
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from typing_extensions import OrderedDict
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Cargar ciertas variables desde variables de sistema o el fichero "BASE_DIR/.env"
+load_dotenv()
+
+# Añadir la carpeta utilidad al path the python para poder usarlo como una libreria instalada con pip
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(PROJECT_ROOT, 'utilidad'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -27,23 +35,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6f@aenc^c_ba5@tqk@um!!areq#0f7ml#*2usa1t91ha(m3*_3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['10.0.2.2','localhost','127.0.0.1','192.168.0.12','*']
 
 #Definimos el media root y medias url para que el servidor pueda mostrar la imagen
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR,'/teleasistenciaApp')
+MEDIA_ROOT =  os.path.join(BASE_DIR,'teleasistenciaApp')
 
+# Ancho y Alto
+MINIFICATION_SIZE = (100, 100)
+MINIFICATION_QUALITY = 80
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'channels',
-    'teleasistenciaApp.apps.TeleasistenciaappConfig' ,
     'django.contrib.admin',
     'django.contrib.auth',
+    #'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -61,8 +72,11 @@ INSTALLED_APPS = [
     # Para certificado https:
     "django_extensions",
 
-    #App para la notificación de alarmas
-    'alarmasApp'
+    'teleasistenciaApp',
+    # App para la notificación de alarmas
+    'alarmasApp.apps.AlarmasAppConfig',
+    # App para gestionar todos los tipos de eventos temporizados
+    'schedulerApp.apps.SchedulerAppConfig'
 ]
 
 ASGI_APPLICATION = 'teleasistencia.asgi.application'
@@ -93,6 +107,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'teleasistenciaApp.middleware.LoggingMiddleware',
 ]
 
 #Definimos las  variables de configuración del CORS
@@ -143,29 +158,30 @@ TEMPLATES = [
 ]
 
 ############# DJANGO REST SOCIAL AUTH WITH GOOGLE:
-
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # OAuth
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  # django-oauth-toolkit >= 1.0.0
         #'rest_framework_social_oauth2.authentication.SocialAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 
-      'DEFAULT_PERMISSION_CLASSES': [
-          'rest_framework.permissions.IsAuthenticated',
-      ]
+    'DEFAULT_PERMISSION_CLASSES': [
+      'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 # Especificamos los timpos de validez del token
 # Tambien el tipo de cabecera de ese token Bearer
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    # Lo más "correcto" es que el token de acceso tenga una duración relativamente
+    # corta, de unos minutos, para que no sea de mucho uso si es robado.
+    # Por otra parte, el token de refresco, sirve para obtener un nuevo token de accesow
+    # cuando este deje de ser válido, por lo que lo normal es que este dure significativamente más.
+    # TODO: hacer uso del refresh token en todos los clientes (revertir duración de los tokens)
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=365),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365),
     'AUTH_HEADER_TYPES': ('Bearer',),
-
-
 }
 
 
@@ -177,6 +193,7 @@ AUTHENTICATION_BACKENDS = (
         'rest_framework_social_oauth2.backends.DjangoOAuth2',
     # Django
     'django.contrib.auth.backends.ModelBackend',
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
 )
 
 #Redirección tras login OK POR OAUTH2 (ELIMINAR CUANDO SE COMPRUEBE QUE NO PETA)
@@ -193,11 +210,6 @@ AUTHENTICATION_BACKENDS = (
 
 ##################FIN
 
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-
-
-
 
 
 WSGI_APPLICATION = 'teleasistencia.wsgi.application'
@@ -206,14 +218,26 @@ WSGI_APPLICATION = 'teleasistencia.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(BASE_DIR / 'db.sqlite3'),
+# Obtenemos los datos de conexión de la base de datos de la variable .env
+#En el caso de encontrar algún archvio sqlite3 actualizamos la ruta
+database =""
+if (os.getenv('DATABASES')):
+    database = json.loads(os.getenv('DATABASES'))
+    for data in database:
+        if "sqlite" in database[data]["ENGINE"]:
+            # Añadirmos la ruta absoluta en la que se encuentra la base de datos
+            database[data]["NAME"] = str(BASE_DIR / database[data]["NAME"])
+
+# Comprobamos si se ha cargado bien la base de datos sino cargamos la de por defecto
+if database:
+    DATABASES = database
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(BASE_DIR / 'db.sqlite3'),
+        }
     }
-}
-
-
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -232,18 +256,26 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Password email reset (Fichero: BASE_DIR/.env)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL')
+
+PASSWORD_RESET_TIMEOUT_DAYS = 1
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 

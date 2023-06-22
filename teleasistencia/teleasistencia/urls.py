@@ -25,6 +25,9 @@ from django.conf.urls.static import static
 from rest_framework import routers
 from teleasistenciaApp.rest_django import views_rest
 
+# Para recuperación de contraseñas
+from .views import get_csrf_token, TokenObtainPairSerializerWithLastLogin
+
 #Autenticación rest con JWT:
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -41,10 +44,10 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'users', views_rest.UserViewSet)
 router.register(r'groups', views_rest.GroupViewSet)
 router.register(r'permission', views_rest.PermissionViewSet)
+router.register(r'databases', views_rest.DatabaseViewSet)
+router.register(r'clasificacion_recurso_comunitario', views_rest.Clasificacion_Recurso_Comunitario_ViewSet)
 router.register(r'tipo_recurso_comunitario', views_rest.Tipo_Recurso_Comunitario_ViewSet)
 router.register(r'recurso_comunitario', views_rest.Recurso_Comunitario_ViewSet)
-router.register(r'centro_sanitario', views_rest.Centro_Sanitario_ViewSet)
-router.register(r'tipo_centro_sanitario', views_rest.Tipo_Centro_Sanitario_ViewSet)
 router.register(r'tipo_alarma', views_rest.Tipo_Alarma_ViewSet)
 router.register(r'clasificacion_alarma', views_rest.Clasificacion_Alarma_ViewSet)
 router.register(r'direccion', views_rest.Direccion_ViewSet)
@@ -54,7 +57,6 @@ router.register(r'tipo_agenda', views_rest.Tipo_Agenda_ViewSet)
 router.register(r'historico_agenda_llamadas', views_rest.Historico_Agenda_Llamadas_ViewSet)
 router.register(r'relacion_terminal_recurso_comunitario', views_rest.Relacion_Terminal_Recurso_Comunitario_ViewSet)
 router.register(r'terminal', views_rest.Terminal_ViewSet)
-router.register(r'historico_tipo_situacion', views_rest.Historico_Tipo_Situacion_ViewSet)
 router.register(r'tipo_situacion', views_rest.Tipo_Situacion_ViewSet)
 router.register(r'tipo_vivienda', views_rest.Tipo_Vivienda_ViewSet)
 router.register(r'relacion_paciente_persona', views_rest.Relacion_Paciente_Persona_ViewSet)
@@ -62,16 +64,14 @@ router.register(r'paciente', views_rest.Paciente_ViewSet)
 router.register(r'tipo_modalidad_paciente', views_rest.Tipo_Modalidad_Paciente_ViewSet)
 router.register(r'recursos_comunitarios_en_alarma', views_rest.Recursos_Comunitarios_En_Alarma_ViewSet)
 router.register(r'alarma', views_rest.Alarma_ViewSet)
+router.register(r'cancelar_alarma', views_rest.Alarma_Cancelar_ViewSet)
+router.register(r'alarma_programada', views_rest.Alarma_Programada_ViewSet)
 router.register(r'dispositivos_auxiliares_en_terminal', views_rest.Dispositivos_Auxiliares_en_Terminal_ViewSet)
-router.register(r'centro_sanitario_en_alarma', views_rest.Centro_Sanitario_En_Alarma_ViewSet)
 router.register(r'persona_contacto_en_alarma', views_rest.Persona_Contacto_En_Alarma_ViewSet)
-router.register(r'relacion_usuario_centro', views_rest.Relacion_Usuario_Centro_ViewSet)
 router.register(r'gestion_base_datos', views_rest.Gestion_Base_Datos_ViewSet)
 router.register(r'profile', views_rest.ProfileViewSet)
-router.register(r'recurso_comunitario_personal', views_rest.Recurso_comunitario_personalViewSet, basename="recurso_comunitario_personal")
 router.register(r'desarrollador_tecnologia', views_rest.DesarrolladorTecnologiaViewSet)
-
-
+router.register(r'seguimiento_teleoperador', views_rest.SeguimientoTeleoperador)
 
 
 urlpatterns = [
@@ -89,8 +89,20 @@ urlpatterns = [
     #Django Rest social Auth:
     url(r'^auth/', include('rest_framework_social_oauth2.urls')),
     #Django Rest Simple JWT:
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/', TokenObtainPairView.as_view(serializer_class=TokenObtainPairSerializerWithLastLogin), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # URLs de recuperación de contraseñas de usuarios de Django (desde navegador)
+    path('api-rest/password_reset/csrf', get_csrf_token, name='password_reset_csrf'),
+    # [password_reset_form.html] Aqui se hace la petición, enviando el correo que algún usuario (User) + token csrf)
+    path('api-rest/password_reset/', views.PasswordResetView.as_view(), name='password_reset'),
+    # [password_reset_done.html] Después del post, te redirige aquí para que sepas que la petición se ha gestionado
+    path('api-rest/password_reset/done/', views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    # [password_reset_confirm.html] A donde te manda el link recibido por correo
+    path('api-rest/reset/<uidb64>/<token>/', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    # [password_reset_complete.html] Ventana de confirmación de cambio de contraseña
+    path('api-rest/reset/done/', views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]
 # añadimos el media url y el media root para poder visualizar las imagenes de usuario
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
