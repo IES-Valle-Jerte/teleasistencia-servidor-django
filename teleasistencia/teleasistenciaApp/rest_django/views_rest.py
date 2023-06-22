@@ -1672,6 +1672,12 @@ class DesarrolladorTecnologiaViewSet(viewsets.ModelViewSet):
     serializer_class = Convocatoria_Proyecto_Serializer
     http_method_names=['get']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Ordenar el queryset por el campo deseado
+        queryset = queryset.order_by('-fecha')  # Reemplaza 'nombre_campo' por el campo que desees ordenar
+        return queryset
+
 # Permite mostrar el seguimiento de los teleoperadores
 # Mostrando las alarmas y agendas resueltas
 class SeguimientoTeleoperador(viewsets.ModelViewSet):
