@@ -19,4 +19,4 @@ schedule==1.1.0
 # Lee pares clave-valor de un archivo .env y puede configurarlos como variables de entorno
 python-dotenv==1.0.0
 # Permite el tratamiento de imágenes. Lo usamos para reducir las imágenes que se envian por api-rest
-Pillow==9.4.0
+Pillow==10.1
