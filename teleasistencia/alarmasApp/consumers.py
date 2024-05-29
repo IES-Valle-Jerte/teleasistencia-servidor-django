@@ -1,7 +1,10 @@
 import json
+import os
+
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from dotenv import load_dotenv
 
 from utilidad.logging import magenta, cyan
 
@@ -14,8 +17,9 @@ class Consumer(WebsocketConsumer):
         self.room_group_name = None
 
     def connect(self):
+        load_dotenv()
         magenta("Consumer", "Client connected")
-        self.room_group_name = 'teleoperadores'
+        self.room_group_name = os.getenv("GROUP_REDIS")
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
             self.channel_name
@@ -24,9 +28,10 @@ class Consumer(WebsocketConsumer):
 
     # Función que se ejecutará cuando un WebSocket cliente se desconecte del servidor
     def disconnect(self, code):
+        load_dotenv()
         magenta("Consumer", f"Closed websocket with code {code}")
         async_to_sync(self.channel_layer.group_discard)(
-            'teleoperadores',
+            os.getenv("GROUP_REDIS"),
             self.channel_name
         )
         self.close()

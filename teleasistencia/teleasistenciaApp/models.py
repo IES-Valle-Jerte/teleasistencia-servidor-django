@@ -1,8 +1,9 @@
 import os
+
+from django.contrib.auth import get_user_model
 from django.db import models
 from model_utils import Choices
 from django.utils.timezone import now
-from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 
@@ -16,8 +17,14 @@ from io import BytesIO
 from PIL import Image
 from django.core.files import File
 from django.core.files.base import ContentFile
+from dotenv import load_dotenv
 
 # Create your models here.
+class User(AbstractUser):
+    paciente = models.ForeignKey('Paciente', null=True, blank=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return self.username
 
 
 class Logs_AccionesUsuarios(models.Model):
@@ -28,7 +35,7 @@ class Logs_AccionesUsuarios(models.Model):
 
     timestamp = models.DateTimeField(null=False, default=now)
     direccion_ip = models.CharField(null=False, max_length=40)
-    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey('User', null=True, on_delete=models.SET_NULL)
 
     ruta = models.TextField(null=False, default="")
     query = models.TextField(null=False, default="")
@@ -65,7 +72,7 @@ class Logs_ConexionesUsuarios(models.Model):
 
 # Creamos la clase imagen con los atributos usuario e imagen
 class Imagen_User(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField('User', on_delete=models.CASCADE)
     imagen = models.ImageField(upload_to='imagen_usuario', null=True, blank=True, default="")
 
     def save(self, *args, **kwargs):
@@ -121,7 +128,7 @@ class Database(models.Model):
         return self.nameDescritive+": "+self.name+" - "+self.engine
 
 class Database_User(models.Model):
-   user = models.OneToOneField(User, on_delete=models.CASCADE)
+   user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
    database = models.ForeignKey(Database, on_delete=models.CASCADE)
 
    def __str__(self):
@@ -287,7 +294,7 @@ class Agenda(models.Model):
 
 class Historico_Agenda_Llamadas(models.Model):
     id_agenda = models.ForeignKey(Agenda, null=True, on_delete=models.SET_NULL, related_name="historico_agenda")
-    id_teleoperador = models.ForeignKey(User, null=True, on_delete=models.SET_NULL) #OJO: User de los modelos de admin.
+    id_teleoperador = models.ForeignKey('User', null=True, on_delete=models.SET_NULL) #OJO: User de los modelos de admin.
     observaciones = models.CharField(max_length=4000, blank=True)
     def __str__(self):
         if self.id_agenda and self.id_agenda.id_paciente and self.id_teleoperador:
@@ -306,7 +313,7 @@ class Alarma(models.Model):
     ESTADO_ENUM = Choices("Abierta", "Cerrada")
     estado_alarma = models.CharField(choices=ESTADO_ENUM, default=ESTADO_ENUM.Abierta, max_length=20)
     fecha_registro = models.DateTimeField(null=False, default=now)
-    id_teleoperador = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, blank=True) # OJO: User de los modelos de admin.
+    id_teleoperador = models.ForeignKey('User', null=True, on_delete=models.SET_NULL, blank=True) # OJO: User de los modelos de admin.
     id_paciente_ucr = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL, blank=True)  # OJO: Puede ser null si no lo avisó un paciente
     id_terminal = models.ForeignKey(Terminal, null=True, on_delete=models.SET_NULL, blank=True)  # OJO: Puede ser null si no lo avisó un terminal
     observaciones = models.CharField(max_length=10000, blank=True)
@@ -331,22 +338,22 @@ class Alarma(models.Model):
 
     def notify(self, accion):
         from .rest_django.serializers import Alarma_Serializer
-
+        load_dotenv()
         alarma_serializer = Alarma_Serializer(self)
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            'teleoperadores',
+            os.getenv("GROUP_REDIS"),
             {"type": "notify.clients", "action": accion, "alarma": alarma_serializer.data},
         )
 
-     
+
 class Alarma_Programada(models.Model):
     """
     Plantilla para generar una alarma al ser disparada.
     """
     id_tipo_alarma = models.ForeignKey(Tipo_Alarma, null=True, on_delete=models.SET_NULL)
     fecha_registro = models.DateTimeField(null=False, default=now) # Momento en el que la alarma se disparará
-    
+
     id_paciente_ucr = models.ForeignKey(Paciente, null=True, on_delete=models.SET_NULL, blank=True)  # OJO: Puede ser null si no lo avisó un paciente
     id_terminal = models.ForeignKey(Terminal, null=True, on_delete=models.SET_NULL, blank=True)      # OJO: Puede ser null si no lo avisó un terminal
     def __str__(self):
@@ -422,3 +429,4 @@ class Desarrollador_Tecnologia(models.Model):
     id_tecnologia = models.ForeignKey(Tecnologia, null=True, on_delete=models.SET_NULL)
     def __str__(self):
         return self.id_desarrollador.nombre+ " - "+self.id_tecnologia.nombre
+
