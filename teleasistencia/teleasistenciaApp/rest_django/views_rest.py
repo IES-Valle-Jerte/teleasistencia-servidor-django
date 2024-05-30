@@ -2,17 +2,19 @@ from http.client import HTTPResponse
 from pathlib import Path
 import os
 
-from django.shortcuts import _get_queryset
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import _get_queryset, get_object_or_404
 from requests import request
 
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 
 import os
 import shutil
 # Imports necesarios para la gestion de la base de datos
 from datetime import datetime
 
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
 
@@ -29,14 +31,14 @@ import json
 from ..models import *
 # Serializadores propios
 from ..rest_django.serializers import *
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 
 # Alarmas
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 from utilidad.logging import info, blue, red
-
+User = get_user_model()
 
 # Comprobamos si el usuario es administrador. Se utiliza para la discernir
 # entre solicitudes de Administrador, Profesor y Teleoperador
@@ -195,8 +197,21 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         # Comprobamos que existe el groups
         id_groups = Group.objects.get(pk=request.data.get("groups"))
-        password = request.data.get("password")
+        checkTeleasistenciaMovil = Group.objects.filter(pk=id_groups.id, name="teleasistenciamovil").first()
 
+        password = request.data.get("password")
+        paciente_id = request.data.get("paciente_id")
+
+        if paciente_id:
+            if not checkTeleasistenciaMovil:
+                return Response("Para asignar paciente debes ser TeleasistenciaMovil", 405)
+            else:
+                try:
+                    paciente = Paciente.objects.get(id=paciente_id)
+                except ObjectDoesNotExist:
+                    return Response("El paciente no se encontró o no existe.", status=404)
+        else:
+            paciente = None
         if id_groups is None:
             return Response("Error: Groups",405)
 
@@ -215,6 +230,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Encriptamos la contraseña
         user.set_password(password)
+        user.paciente = paciente
         user.save()
 
         # El usuario nuevo se crea asociado a la misma base de datos que el que lo crea
@@ -263,6 +279,20 @@ class UserViewSet(viewsets.ModelViewSet):
             user.last_name = request.data.get("last_name")
         if request.data.get("is_active") is not None:
             user.is_active = normalizar_booleano(request.data.get("is_active"))
+        if request.data.get("paciente_id") is not None:
+            id_groups = user.groups.values_list('id', flat=True)
+            if Group.objects.filter(pk__in=id_groups, name="teleasistenciamovil").exists():
+                paciente_id = request.data.get("paciente_id")
+                if paciente_id:
+                    try:
+                        paciente = Paciente.objects.get(id=paciente_id)
+                        user.paciente = paciente
+                    except ObjectDoesNotExist:
+                        return Response("El paciente no se encontró o no existe.", status=404)
+                else:
+                    user.paciente = None
+            else:
+                return Response("Para asignar un paciente, debes ser parte del grupo TeleasistenciaMovil", status=405)
         user.save()
         if request.FILES:
             # Extraer la imagen que han subido

@@ -7,6 +7,7 @@ from .models import *
 
 # Register your models here.
 
+admin.site.register(User)
 admin.site.register(Logs_AccionesUsuarios)
 admin.site.register(Logs_ConexionesUsuarios)
 admin.site.register(Imagen_User)
