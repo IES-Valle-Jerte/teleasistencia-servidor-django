@@ -22,7 +22,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from django.utils.connection import ConnectionDoesNotExist
-from .utils import getQueryAnd, partial_update_generico, normalizar_booleano
+from .utils import getQueryAnd,getQueryOr, partial_update_generico, normalizar_booleano
 import json
 
 # Modelos propios
@@ -1231,6 +1231,14 @@ class Alarma_ViewSet(viewsets.ModelViewSet):
         if query:
             if request.GET.getlist('fecha_registro'):
                 queryset = Alarma.objects.filter(fecha_registro__date=request.GET['fecha_registro'])
+            elif request.GET.getlist('id_paciente_ucr'):
+                # Aquí buscamos por id_paciente_url y id_terminal.id_titular.id_persona
+                id_paciente = request.GET.get('id_paciente_ucr')
+                query = getQueryOr({
+                    'id_paciente_ucr': id_paciente,
+                    'id_terminal__id_titular': id_paciente
+                })
+                queryset = Alarma.objects.filter(query)
             else:
                 queryset = Alarma.objects.filter(query)
 
